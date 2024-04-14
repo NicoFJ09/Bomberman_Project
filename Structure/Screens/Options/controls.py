@@ -1,4 +1,4 @@
-#toggle options to change keybinds
+#opciones toggle para cambiar funciones de teclas
 """import pygame
 from Structure.var_consts import *
 

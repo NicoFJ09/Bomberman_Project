@@ -1,4 +1,4 @@
-#TEC info, career, subject, last page with year, proffesor, country production and version
+#Informacion del TEC, carrera, curso, año, profesor, pais de produccion and version
 """import pygame
 from Structure.var_consts import *
 

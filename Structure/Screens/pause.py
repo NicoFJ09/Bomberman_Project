@@ -1,4 +1,4 @@
-#pause screen that acts like the home screen but with the posibility to exit to home
+#Pantalla de pausa que actua como homescreen
 """import pygame
 from Structure.var_consts import *
 

@@ -1,4 +1,4 @@
-#Death screen that allows you to go back to start or respawn
+#Pantalla de muerte que devuelve a inicio o reinicia
 """import pygame
 from Structure.var_consts import *
 

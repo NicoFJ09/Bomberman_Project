@@ -24,36 +24,87 @@ Testing and debugging: Test your game thoroughly and debug any issues that arise
 import pygame
 import sys
 sys.path.append('../')
+
 from var_consts import *
+
 from Screens.home import render_home
+
+from Screens.Levels.Level_1 import render_level_1
 
 pygame.init()
 
 #Window setup 
 pygame.display.set_caption(TITLE)
-screen = pygame.display.set_mode ((WIDTH,HEIGHT))
+screen = pygame.display.set_mode((WIDTH,HEIGHT))
 
 #Main Background
 background = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Home_bg.png").convert_alpha(), (1200, 900))
 
 #Font load
-font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",50)
+font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",40)
 
+#game ticks setup
 clock = pygame.time.Clock()
 
+#DETECTAR SALIR JUEGO
+
+def handle_quit():
+    # Check if there are events in the event queue
+    if pygame.event.peek(pygame.QUIT):
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+    # Call handle_events recursively
+        return handle_quit()
+
+#DETECTAR MOVIMIENTOS EN HOME
+
+def handle_home_controls(selected_index, options, selected_option):
+    events = pygame.event.get()
+    if not events:  # Base case: No more events
+        return selected_index, selected_option
+    
+    event = events.pop(0)  # Get the first event
+    
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_w:  # Move selection up
+            selected_index = (selected_index - 1) % len(options)
+        elif event.key == pygame.K_s:  # Move selection down
+            selected_index = (selected_index + 1) % len(options)
+        elif event.key == pygame.K_RETURN:  # Select option
+            selected_option = options[selected_index]
+            return selected_index, selected_option
+            
+    return handle_home_controls(selected_index, options, selected_option)
+
+def handle_selected_option(selected_option):
+    if selected_option == "START":
+        return "level_1"  # Update current screen to level 1
+    """
+    if selected_option == "SETTINGS":
+        return "settings"
+    if selected_option == "MANUAL":
+        return "manual"
+    if selected_option == "TOP_SCORES":
+        return "top_scores"
+    if selected_option == "ABOUT":
+        return "about"
+    """
+    if selected_option == "MAIN MENU":
+        return "home"
 def main():
-    current_screen = "start"
+    global selected_index, options, selected_option, current_screen
     while RUNNING:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
+        # Handle exit after pressing x
+        handle_quit()
         #1 Home screen rendering
-        if current_screen == "start":
-            render_home(screen, background, font, WIDTH,HEIGHT)
-        
-
+        if current_screen == "home":
+            selected_index, selected_option = handle_home_controls(selected_index, options, selected_option)
+            current_screen= handle_selected_option(selected_option)
+            render_home(screen, background, font, WIDTH,HEIGHT,selected_index, options)
+        if current_screen == "level_1":
+            render_level_1(screen,font, WIDTH, HEIGHT)
         #Update
         pygame.display.update()
         clock.tick(60)
