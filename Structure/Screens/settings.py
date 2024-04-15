@@ -1,7 +1,7 @@
 #opciones toggle para cambiar funciones de teclas
 import pygame
 
-def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index):
+def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index,blink):
     if index>= len(options):
 
         return
@@ -15,9 +15,13 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
     key = list(options.keys())[index]
     value = options[key]
     option_text= f"{key} {value}"
-    # Opcion actual para renderizar y blit
+
+
     if index == hovered_index:
-        text_surface = font.render(option_text, True, (255, 255, 0))  # Yellow color for selected option
+        if blink:
+            text_surface = font.render(option_text, True, (255, 255, 0))  # Yellow color for selected option
+        else:
+            text_surface = font.render("", True, (255, 255, 0)) 
     else:
         text_surface = font.render(option_text, True, (26, 140, 24))  # Default color for unselected options
     
@@ -26,10 +30,10 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
     screen.blit(text_surface, text_rect)
     y+=gap
 
-    return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index)
+    return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index,blink)
 
 
-def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options):
+def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options,blink):
 
     #Background slightly gray coated
     #Background slightly gray coated
@@ -48,4 +52,4 @@ def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIG
     x=  HWIDTH/2
     
 
-    return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index)
+    return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index, blink)

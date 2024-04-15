@@ -20,10 +20,14 @@ Settings_options = {
     "DROP BOMB:": "SPACE",
     "DETONATE BOMB:": "F",
     "PAUSE:": "P",
-    "MUSIC:": "M",
-    "SOUND EFFECTS:": "E", "EXIT (APPLY CHANGES)":""
+    "SOUND TOGGLE:":"ON", "MUSIC TOGGLE:":"ON", "EXIT (APPLY CHANGES)":""
 }
 MWIDTH=900
 MHEIGHT=675
 
-
+#Blink selection
+blink = False
+blink_interval = 250  # Interval for blinking in milliseconds
+last_blink_time = 0
+selection_locked = False
+next_key= None

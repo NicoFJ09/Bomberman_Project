@@ -49,6 +49,7 @@ font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
 
 #game ticks setup
 clock = pygame.time.Clock()
+blink= pygame.time.get_ticks()
 
 #DETECTAR SALIR JUEGO
 
@@ -76,36 +77,38 @@ def handle_home_controls(selected_index, options, selected_option):
             selected_index = (selected_index - 1) % len(options)
         elif event.key == pygame.K_s:  # Move selection down
             selected_index = (selected_index + 1) % len(options)
-        elif event.key == pygame.K_RETURN:  # Select option
+        elif event.key == pygame.K_RETURN and current_screen=="home":  # Select option
             selected_option = options[selected_index]
+            return selected_index, selected_option
+        elif event.key == pygame.K_RETURN and current_screen=="settings":  # Select option
+            selected_key = list(options.keys())[selected_index]
+            selected_option = selected_key
             return selected_index, selected_option
             
     return handle_home_controls(selected_index, options, selected_option)
 
 def handle_selected_option(selected_option):
-    global selected_index
     if selected_option == "START":
-        selected_index=0
         return "level_1"  # Update current screen to level 1
-    
     elif selected_option == "SETTINGS":
-        selected_index=0
         return "settings"
     elif selected_option == "MANUAL":
-        selected_index=0
         return "manual"
     elif selected_option == "TOP_SCORES":
-        selected_index=0
         return "top_scores"
     elif selected_option == "ABOUT":
-        selected_index=0
         return "about"
-    if selected_option == "MAIN MENU":
+    elif selected_option == "MAIN MENU":
         return "home"
-    else:
+    elif selected_option in ["MOVE UP:", "MOVE DOWN:", "MOVE LEFT:", "MOVE RIGHT:",
+                            "DROP BOMB:", "DETONATE BOMB:", "PAUSE:", "SOUND TOGGLE:",
+                            "MUSIC TOGGLE:"]:
+        return "settings"
+    elif selected_option == "EXIT (APPLY CHANGES)":
         return "home"
+
 def main():
-    global selected_index, Settings_options, Home_options, selected_option, current_screen
+    global selected_index, Settings_options, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time
     while RUNNING:
         # Handle exit after pressing x
         handle_quit()
@@ -115,8 +118,14 @@ def main():
             current_screen= handle_selected_option(selected_option)
             render_home(screen, Hbackground, font, HWIDTH,HHEIGHT,selected_index, Home_options)
         if current_screen == "settings":
+                # Toggle blinking state based on timer
+            current_time = pygame.time.get_ticks()
+            if selected_option== list(Settings_options.keys())[selected_index] and current_time - last_blink_time > blink_interval:
+                blink = not blink
+                last_blink_time = current_time
             selected_index, selected_option = handle_home_controls(selected_index, Settings_options, selected_option)
-            render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options)
+            current_screen = handle_selected_option(selected_option)
+            render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)
         elif current_screen == "manual":
             pass
         elif current_screen == "top_scores":
