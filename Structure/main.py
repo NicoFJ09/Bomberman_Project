@@ -31,17 +31,21 @@ from Screens.home import render_home
 
 from Screens.Levels.Level_1 import render_level_1
 
+from Screens.settings import render_controls_volume
+
 pygame.init()
 
 #Window setup 
 pygame.display.set_caption(TITLE)
-screen = pygame.display.set_mode((WIDTH,HEIGHT))
+screen = pygame.display.set_mode((HWIDTH,HHEIGHT))
 
-#Main Background
-background = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Home_bg.png").convert_alpha(), (1200, 900))
+#Home Background
+Hbackground = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Home_bg.png").convert_alpha(), (HWIDTH,HHEIGHT))
 
+#Menu Background
+Mbackground = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Menu_bg.png").convert_alpha(), (MWIDTH,MHEIGHT))
 #Font load
-font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",40)
+font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
 
 #game ticks setup
 clock = pygame.time.Clock()
@@ -79,32 +83,48 @@ def handle_home_controls(selected_index, options, selected_option):
     return handle_home_controls(selected_index, options, selected_option)
 
 def handle_selected_option(selected_option):
+    global selected_index
     if selected_option == "START":
+        selected_index=0
         return "level_1"  # Update current screen to level 1
-    """
-    if selected_option == "SETTINGS":
+    
+    elif selected_option == "SETTINGS":
+        selected_index=0
         return "settings"
-    if selected_option == "MANUAL":
+    elif selected_option == "MANUAL":
+        selected_index=0
         return "manual"
-    if selected_option == "TOP_SCORES":
+    elif selected_option == "TOP_SCORES":
+        selected_index=0
         return "top_scores"
-    if selected_option == "ABOUT":
+    elif selected_option == "ABOUT":
+        selected_index=0
         return "about"
-    """
     if selected_option == "MAIN MENU":
         return "home"
+    else:
+        return "home"
 def main():
-    global selected_index, options, selected_option, current_screen
+    global selected_index, Settings_options, Home_options, selected_option, current_screen
     while RUNNING:
         # Handle exit after pressing x
         handle_quit()
         #1 Home screen rendering
         if current_screen == "home":
-            selected_index, selected_option = handle_home_controls(selected_index, options, selected_option)
+            selected_index, selected_option = handle_home_controls(selected_index, Home_options, selected_option)
             current_screen= handle_selected_option(selected_option)
-            render_home(screen, background, font, WIDTH,HEIGHT,selected_index, options)
-        if current_screen == "level_1":
-            render_level_1(screen,font, WIDTH, HEIGHT)
+            render_home(screen, Hbackground, font, HWIDTH,HHEIGHT,selected_index, Home_options)
+        if current_screen == "settings":
+            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, selected_option)
+            render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options)
+        elif current_screen == "manual":
+            pass
+        elif current_screen == "top_scores":
+            pass
+        elif current_screen == "about":
+            pass
+        elif current_screen == "level_1":
+            render_level_1(screen,font, HWIDTH, HHEIGHT)
         #Update
         pygame.display.update()
         clock.tick(60)

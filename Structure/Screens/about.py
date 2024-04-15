@@ -1,6 +1,14 @@
 #Informacion del TEC, carrera, curso, año, profesor, pais de produccion and version
-"""import pygame
-from Structure.var_consts import *
+import pygame
+def render_about(screen, Mbackground, Hbackground, WIDTH, HEIGHT):
 
-def render_about(screen, background, font):
-    None"""
+    #Background slightly gray coated
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((128, 128, 128, 128))
+    screen.blit(Hbackground, (0, 0))
+    
+    screen.blit(overlay, (0, 0))
+
+    #Insert box
+    settings_bg_rect = Mbackground.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(Mbackground, settings_bg_rect)
