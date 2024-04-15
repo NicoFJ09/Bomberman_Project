@@ -66,6 +66,7 @@ def handle_quit():
 #DETECTAR MOVIMIENTOS EN HOME
 
 def handle_home_controls(selected_index, options, selected_option):
+    global selection_locked, next_key, blink
     events = pygame.event.get()
     if not events:  # Base case: No more events
         return selected_index, selected_option
@@ -73,21 +74,29 @@ def handle_home_controls(selected_index, options, selected_option):
     event = events.pop(0)  # Get the first event
     
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_w:  # Move selection up
-            selected_index = (selected_index - 1) % len(options)
-        elif event.key == pygame.K_s:  # Move selection down
-            selected_index = (selected_index + 1) % len(options)
-        elif event.key == pygame.K_RETURN and current_screen=="home":  # Select option
-            selected_option = options[selected_index]
-            return selected_index, selected_option
-        elif event.key == pygame.K_RETURN and current_screen=="settings":  # Select option
-            selected_key = list(options.keys())[selected_index]
-            selected_option = selected_key
-            return selected_index, selected_option
+        if selection_locked:
+            next_key = event.key
+            blink = True
+            selection_locked=False
+        else: 
+            if event.key == pygame.K_w:  # Move selection up
+                selected_index = (selected_index - 1) % len(options)
+            elif event.key == pygame.K_s:  # Move selection down
+                selected_index = (selected_index + 1) % len(options)
+            elif event.key == pygame.K_RETURN and current_screen=="home":  # Select option
+                selected_option = options[selected_index]
+                return selected_index, selected_option
+            elif event.key == pygame.K_RETURN and current_screen=="settings":  # Select option
+                selected_key = list(options.keys())[selected_index]
+                selected_option = selected_key
+                selection_locked = True
+                return selected_index, selected_option
+
             
     return handle_home_controls(selected_index, options, selected_option)
 
 def handle_selected_option(selected_option):
+    global selection_locked 
     if selected_option == "START":
         return "level_1"  # Update current screen to level 1
     elif selected_option == "SETTINGS":
@@ -101,8 +110,7 @@ def handle_selected_option(selected_option):
     elif selected_option == "MAIN MENU":
         return "home"
     elif selected_option in ["MOVE UP:", "MOVE DOWN:", "MOVE LEFT:", "MOVE RIGHT:",
-                            "DROP BOMB:", "DETONATE BOMB:", "PAUSE:", "SOUND TOGGLE:",
-                            "MUSIC TOGGLE:"]:
+                            "DROP BOMB:", "DETONATE BOMB:", "PAUSE:"]:
         return "settings"
     elif selected_option == "EXIT (APPLY CHANGES)":
         return "home"
@@ -120,7 +128,7 @@ def main():
         if current_screen == "settings":
                 # Toggle blinking state based on timer
             current_time = pygame.time.get_ticks()
-            if selected_option== list(Settings_options.keys())[selected_index] and current_time - last_blink_time > blink_interval:
+            if selection_locked and current_time - last_blink_time > blink_interval:
                 blink = not blink
                 last_blink_time = current_time
             selected_index, selected_option = handle_home_controls(selected_index, Settings_options, selected_option)
