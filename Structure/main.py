@@ -40,8 +40,15 @@ def handle_quit():
     # Call handle_events recursively
         return handle_quit()
 
+def check_keybinds(options, new_value):
+    for key in options:
+        if options[key] == chr(new_value).upper():
+            return False
+    return True
+#Compara para revisar si hay repetidos
+    
 #DETECTAR MOVIMIENTOS EN HOME
-def handle_home_controls(selected_index, options, selected_option):
+def handle_home_controls(selected_index, options, settings_options, selected_option):
     global selection_locked, next_value, blink
     events = pygame.event.get()
 
@@ -56,26 +63,29 @@ def handle_home_controls(selected_index, options, selected_option):
             selection_locked = False
             selected_option = list(options.keys())[selected_index]
             if selected_option == "SOUND TOGGLE:" or selected_option == "MUSIC TOGGLE:":
-                if event.key == pygame.K_a or event.key == pygame.K_d:
+                if event.key == pygame.key.key_code(settings_options["MOVE LEFT:"]) or event.key == pygame.key.key_code(settings_options["MOVE RIGHT:"]):
                     options[selected_option] = "<-ON->" if options[selected_option] == "<-OFF->" else "<-OFF->"
             else:
                 # Append the pressed key to the list
-                options[selected_option]= (pygame.key.name(next_value).upper())
+                if check_keybinds(options, next_value):
+                    options[selected_option] = (pygame.key.name(next_value).upper())
+                else: 
+                    print("value is already assigned to another key!")
         else: 
-            if event.key == pygame.K_w:  # Move selection up
+            if event.key == pygame.key.key_code(settings_options["MOVE UP:"]):  # Move selection up
                 selected_index = (selected_index - 1) % len(options)
-            elif event.key == pygame.K_s:  # Move selection down
+            elif event.key == pygame.key.key_code(settings_options["MOVE DOWN:"]):  # Move selection down
                 selected_index = (selected_index + 1) % len(options)
-            elif event.key == pygame.K_RETURN and current_screen == "home":  # Select option
+            elif event.key == pygame.key.key_code(settings_options["SELECT:"]) and current_screen == "home":  # Select option
                 selected_option = options[selected_index]
                 return selected_index, selected_option
-            elif event.key == pygame.K_RETURN and current_screen == "settings":  # Select option
-                selected_key = list(options.keys())[selected_index]
+            elif event.key == pygame.key.key_code(settings_options["SELECT:"]) and current_screen == "settings":  # Select option
+                selected_key = list(settings_options.keys())[selected_index]
                 selected_option = selected_key
                 selection_locked = True
                 return selected_index, selected_option
 
-    return handle_home_controls(selected_index, options, selected_option)
+    return handle_home_controls(selected_index, options, settings_options, selected_option)
 
 def handle_selected_option(selected_option):
     global selection_locked
@@ -92,21 +102,21 @@ def handle_selected_option(selected_option):
     elif selected_option == "MAIN MENU":
         return "home"
     elif selected_option in ["MOVE UP:", "MOVE DOWN:", "MOVE LEFT:", "MOVE RIGHT:",
-                            "DROP BOMB:", "DETONATE BOMB:", "PAUSE:", "SOUND TOGGLE:", "MUSIC TOGGLE:"]:
+                            "DROP BOMB:", "DETONATE BOMB:", "PAUSE:", "SOUND TOGGLE:", "MUSIC TOGGLE:", "SELECT:"]:
         return "settings"
     elif selected_option == "EXIT (APPLY CHANGES)":
         selection_locked=False
         return "home"
 
 def main():
-    global selected_index, Settings_options, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry
+    global selected_index, Settings_options, special_keys, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry
     while RUNNING:
         # Handle exit after pressing x
         handle_quit()
         #1 Home screen rendering
         if current_screen == "home":
             Initial_entry = True
-            selected_index, selected_option = handle_home_controls(selected_index, Home_options, selected_option)
+            selected_index, selected_option = handle_home_controls(selected_index, Home_options, Settings_options, selected_option)
             current_screen= handle_selected_option(selected_option)
             render_home(screen, Hbackground, font, HWIDTH,HHEIGHT,selected_index, Home_options)
         #2 Settings rendering
@@ -121,9 +131,9 @@ def main():
                 selected_index = 0
                 Initial_entry = False            
 
-            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, selected_option)
+            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, Settings_options, selected_option)
             current_screen = handle_selected_option(selected_option)
-            render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)
+            render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink, special_keys)
 
         elif current_screen == "manual":
             pass

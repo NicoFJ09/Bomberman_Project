@@ -1,7 +1,7 @@
 #opciones toggle para cambiar funciones de teclas
 import pygame
 
-def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index,blink):
+def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index,blink, special_keys):
     if index>= len(options):
 
         return
@@ -14,6 +14,8 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
 
     key = list(options.keys())[index]
     value = options[key]
+    if value in special_keys:
+        value = special_keys[value]
     option_text= f"{key} {value}"
 
 
@@ -30,10 +32,10 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
     screen.blit(text_surface, text_rect)
     y+=gap
 
-    return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index,blink)
+    return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index,blink, special_keys)
 
 
-def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options,blink):
+def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options,blink, special_keys):
 
     #Background slightly gray coated
     #Background slightly gray coated
@@ -52,4 +54,4 @@ def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIG
     x=  HWIDTH/2
     
 
-    return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index, blink)
+    return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index, blink, special_keys)
