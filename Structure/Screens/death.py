@@ -1,6 +1,6 @@
 #Pantalla de muerte que devuelve a inicio o reinicia
 import pygame
-def render_death(screen, Mbackground, Hbackground, WIDTH, HEIGHT):
+def render_GameOver(screen, Mbackground, Hbackground, WIDTH, HEIGHT):
 
     #Background slightly gray coated
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
