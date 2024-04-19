@@ -22,6 +22,7 @@ Settings_options = {
     "DROP BOMB:": ' ',
     "PAUSE:": "P",
     "RESTART": "R",
+    "RESTART": "R",
     "SELECT:": '\r',
     "SOUND TOGGLE:":"<-ON->", "MUSIC TOGGLE:":"<-ON->", "EXIT (APPLY CHANGES)":""
 }
