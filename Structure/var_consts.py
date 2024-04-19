@@ -21,6 +21,7 @@ Settings_options = {
     "MOVE RIGHT:": "D",
     "DROP BOMB:": ' ',
     "PAUSE:": "P",
+    "RESTART": "R",
     "SELECT:": '\r',
     "SOUND TOGGLE:":"<-ON->", "MUSIC TOGGLE:":"<-ON->", "EXIT (APPLY CHANGES)":""
 }
@@ -123,3 +124,5 @@ y_axis= "IMAGES"
 PAGE_WIDTH = 675
 PAGE_HEIGHT = 450
 
+#Skin select
+skins= ["Samus", "Bomberman", "Kirby"]
