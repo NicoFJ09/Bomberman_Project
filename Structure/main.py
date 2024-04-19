@@ -1,7 +1,6 @@
 # ============================================================= IMPORTS ===================================================================
 
 import pygame
-import time
 import sys
 sys.path.append('../')
 
@@ -12,6 +11,7 @@ from Screens.settings import render_controls_volume
 from Screens.manual import render_manual
 from Screens.about import render_about
 from Screens.top_scores import render_top_scores
+from Screens.user_select import render_user_select
 # ===================================================================== GAME SETUP ======================================================
 pygame.init()
 
@@ -26,6 +26,9 @@ Hbackground = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Home_
 #Menu Background
 Mbackground = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Menu_bg.png").convert_alpha(), (MWIDTH,MHEIGHT))
 
+#User Background
+Ubackground = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/User_bg.png").convert_alpha(), (HWIDTH,HHEIGHT))
+
 #Manual Pages
 Manual_1 = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Manual_1.png").convert_alpha(), (PAGE_WIDTH,PAGE_HEIGHT))
 Manual_2 = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Manual_2.png").convert_alpha(), (PAGE_WIDTH,PAGE_HEIGHT))
@@ -34,6 +37,16 @@ Manual_4 = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/Manual_4
 
 #About Page
 About = pygame.transform.scale(pygame.image.load("Assets/Backgrounds/About.png").convert_alpha(), (PAGE_WIDTH,PAGE_HEIGHT))
+
+#Select skin sprites
+Bfrontal_1 = pygame.transform.scale(pygame.image.load("Assets/Sprites/Bfrontal_1.png").convert_alpha(), (PAGE_WIDTH*(1/5),PAGE_HEIGHT*(4/9)))
+Kfrontal_1 = pygame.transform.scale(pygame.image.load("Assets/Sprites/Kfrontal_1.png").convert_alpha(), (PAGE_WIDTH*(2/9),PAGE_HEIGHT*(1/3)))
+Sfrontal_1 = pygame.transform.scale(pygame.image.load("Assets/Sprites/Sfrontal_1.png").convert_alpha(), (PAGE_WIDTH*(2/9),PAGE_HEIGHT*(1/3)))
+skin_sprites = {
+    "Samus": Sfrontal_1,
+    "Bomberman": Bfrontal_1,
+    "Kirby": Kfrontal_1
+}
 #Font load
 Hfont = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
 
@@ -68,7 +81,7 @@ def check_keybinds(options, new_value, keys=None):
 
 
 def handle_home_controls(selected_index, options, settings_options, selected_option):
-   global selection_locked, next_value, blink, y_axis
+   global selection_locked, next_value, blink, y_axis, input_text
    events = pygame.event.get()
 
 
@@ -117,19 +130,40 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
            elif event.key == pygame.key.key_code(settings_options["SELECT:"]) and (current_screen == "manual" and y_axis=="EXIT") or (current_screen == "about" and y_axis=="EXIT") or (current_screen == "top_scores" and y_axis=="EXIT")  :  # Select option
                selected_option = "EXIT"
                return selected_index, selected_option
+           #USER SELECT CONTROLS
+           #Skin
+           elif event.key == pygame.key.key_code(settings_options["MOVE LEFT:"]) and current_screen == "skin_select":
+               selected_index = (selected_index - 1) % len(options)
+           elif event.key == pygame.key.key_code(settings_options["MOVE RIGHT:"]) and current_screen == "skin_select":
+               selected_index = (selected_index + 1) % len(options)
+           elif event.key == pygame.key.key_code(settings_options["SELECT:"]) and current_screen == "skin_select":  # Select option
+               selected_key = list(skin_sprites.keys())[selected_index]
+               selected_option = selected_key
+               return selected_index, selected_option
+           #User
+           elif current_screen == "name_select":
+               if event.key == pygame.K_RETURN:
+                   selected_option = "level_1"
+                   selected_index = input_text
+                   return selected_index, selected_option
+               elif event.key == pygame.K_BACKSPACE:
+                   input_text = input_text[:-1]
+               else:
+                   input_text += event.unicode
                
-
    return handle_home_controls(selected_index, options, settings_options, selected_option)
 
-# ====================================================== MANUAL/SELECT SKIN/ ENTER NAME CONTROL HANDLING ====================================================
-
-def handle_profile_controls():
-    None
 # ================================================ SCREEN SELECTION HANDLING =============================================================================
 def handle_selected_option(selected_option):
    global selection_locked
    if selected_option == "START":
-       return "level_1" 
+       return "skin_select" 
+   elif selected_option in skin_sprites and current_screen == "skin_select":
+       return "name_select"
+   elif selected_option == "name_select":
+       return "name_select"
+   elif selected_option == "level_1":
+       return "level_1"
    elif selected_option == "SETTINGS":
        return "settings"
    elif selected_option == "MANUAL":
@@ -153,7 +187,7 @@ def handle_selected_option(selected_option):
 # ========================================================================== MAIN CODE LOOP ==================================================================
 
 def main():
-   global selected_index, Settings_options, special_keys, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis
+   global selected_index, Settings_options, special_keys, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, Selected_skin_option, selected_name
    while RUNNING:
        #Handle exit after pressing x
        handle_quit()
@@ -178,7 +212,7 @@ def main():
            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, Settings_options, selected_option)
            current_screen = handle_selected_option(selected_option)
            render_controls_volume(screen, Mbackground, Hbackground, Hfont, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink, special_keys)
-        #3 ========================================================================= MANUAL RENDERING ========================================================
+        #4 ========================================================================= MANUAL RENDERING ========================================================
        elif current_screen == "manual":
 
            if Initial_entry:
@@ -186,11 +220,10 @@ def main():
                Initial_entry = False
                y_axis= "IMAGES"
 
-
            selected_index, selected_option = handle_home_controls(selected_index, pages, Settings_options, selected_option)
            current_screen = handle_selected_option(selected_option)
            render_manual(screen, Hfont, Mbackground, Hbackground, Manual_1, Manual_2, Manual_3, Manual_4, pages, HWIDTH, HHEIGHT, PAGE_WIDTH, PAGE_HEIGHT, selected_index, y_axis)
-       #3 =========================================|        ================================ TOP SCORES RENDERING ========================================================
+       #5 ========================================================================= TOP SCORES RENDERING ========================================================
        elif current_screen == "top_scores":
             if Initial_entry:
                selected_index = 0
@@ -199,7 +232,7 @@ def main():
             selected_index, selected_option = handle_home_controls(selected_index, pages, Settings_options, selected_option)
             current_screen = handle_selected_option(selected_option)
             render_top_scores(screen,Hfont, Mbackground, Hbackground, HWIDTH, HHEIGHT)
-       #3 ========================================================================= ABOUT RENDERING ========================================================
+       #6 ========================================================================= ABOUT RENDERING ========================================================
        elif current_screen == "about":
             if Initial_entry:
                selected_index = 0
@@ -208,7 +241,19 @@ def main():
             selected_index, selected_option = handle_home_controls(selected_index, pages, Settings_options, selected_option)
             current_screen = handle_selected_option(selected_option)
             render_about(screen, Hfont, Mbackground, Hbackground, About, HWIDTH, HHEIGHT, PAGE_WIDTH, PAGE_HEIGHT)
-       #3 ========================================================================= LEVELS RENDERING ========================================================
+       #7 ========================================================================= SKIN/NAME SELECT RENDERING ========================================================
+       elif current_screen == "skin_select":
+            selected_index, selected_option = handle_home_controls(selected_index, skin_sprites, Settings_options, selected_option)
+            Selected_skin_option = selected_option
+            current_screen = handle_selected_option(selected_option)
+            render_user_select(screen,Hfont, Mbackground, Ubackground, skin_sprites, HWIDTH, HHEIGHT,PAGE_WIDTH, PAGE_HEIGHT, selected_index, current_screen, input_text)
+       elif current_screen == "name_select":
+            selected_option = "name_select"
+            selected_index, selected_option = handle_home_controls(selected_index, skin_sprites, Settings_options, selected_option)
+            selected_name = selected_index
+            current_screen = handle_selected_option(selected_option)
+            render_user_select(screen,Hfont, Mbackground, Ubackground, skin_sprites, HWIDTH, HHEIGHT,PAGE_WIDTH, PAGE_HEIGHT, selected_index, current_screen, input_text)
+       #7 ========================================================================= LEVELS RENDERING ========================================================
        elif current_screen == "level_1":
            render_level_1(screen,Hfont, HWIDTH, HHEIGHT)
        #Update
