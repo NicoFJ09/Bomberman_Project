@@ -1,5 +1,5 @@
 import pygame
-def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index,blink, special_keys):
+def render_controls_volume_aux(screen, font, screen_height, options, x, y, index, hovered_index,blink):
    if index>= len(options):
        return
  
@@ -11,8 +11,6 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
 
    key = list(options.keys())[index]
    value = options[key]
-   if value in special_keys:
-       value = special_keys[value]
    option_text= f"{key} {value}"
 
    if index == hovered_index:
@@ -28,11 +26,11 @@ def render_controls_volume_aux(screen, font, screen_height, options, x, y, index
    screen.blit(text_surface, text_rect)
    y+=gap
 
-   return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index,blink, special_keys)
+   return render_controls_volume_aux(screen, font, screen_height, options, x, y, index+1, hovered_index,blink)
 
 
 
-def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options,blink, special_keys):
+def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIGHT, MHEIGHT, hovered_index, Settings_options,blink):
    #Background slightly gray coated
    overlay = pygame.Surface((HWIDTH, HHEIGHT), pygame.SRCALPHA)
    overlay.fill((128, 128, 128, 128))
@@ -53,4 +51,4 @@ def render_controls_volume(screen, Mbackground, Hbackground, font, HWIDTH, HHEIG
    # Calcular coordenada x para todas opciones
    x=  HWIDTH/2
  
-   return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index, blink, special_keys)
+   return render_controls_volume_aux(screen, font, MHEIGHT, Settings_options, x, y, 0, hovered_index, blink)
