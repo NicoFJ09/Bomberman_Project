@@ -15,7 +15,7 @@ from Screens.user_select import render_user_select
 
 #Main game imports
 from Player.controls import handle_player_actions
-from Player.display import draw_player, draw_blocks, generate_blocks_positions
+from Player.display import draw_player, draw_blocks
 from Screens.Levels.Level_1 import render_level_1
 from Screens.Levels.Level_constants import *
 from Screens.Levels.Level_Name_Display import render_level_name
@@ -68,7 +68,15 @@ B_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_down_
 B_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 B_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 B_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_up_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-B_death_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_death_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+
+K_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+K_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+K_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+K_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_up_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+
+S_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+S_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+
 #Font load
 Hfont = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
 TITLE_font = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",100)
@@ -370,12 +378,11 @@ def main():
        elif current_screen == "level_1":
            frame_counter+=1
            screen.fill((26, 140, 24))
-           blocks_positions = generate_blocks_positions()
            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs)
-           player_position, selected_option, is_moving , current_direction  = handle_player_actions(Settings_options, player_position, is_moving, current_direction, blocks_positions)
+           player_position, selected_option, is_moving , current_direction= handle_player_actions(Settings_options, player_position, is_moving, current_direction, blocks_positions, bombs_list)
            current_screen = handle_selected_option(selected_option)
-           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, current_direction, is_moving, frame_counter)
-           draw_blocks(screen, I_block)
+           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
+           draw_blocks(screen, I_block, blocks_positions)
        #Update
        pygame.display.update()
        clock.tick(60)
