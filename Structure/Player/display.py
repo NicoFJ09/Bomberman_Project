@@ -1,6 +1,6 @@
 import pygame
 from var_consts import *
-
+import time
 def extract_frames(sprite_sheet_image, num_frames_per_direction, frame_width, frame_height, frames=None, i=0):
     # Initialize frames list on the first call
     if frames is None:
@@ -30,6 +30,8 @@ def draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_do
             frames = extract_frames(B_left_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
         elif current_direction == "RIGHT":
             frames = extract_frames(B_right_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+        else:
+            frames = []  # Ensure frames is assigned a value in all cases
         if is_moving:
             screen.blit(frames[(frame_counter // FRAME_DURATION) % num_frames_per_direction], player_position)
         else:
@@ -44,6 +46,8 @@ def draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_do
             frames = extract_frames(K_left_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
         elif current_direction == "RIGHT":
             frames = extract_frames(K_right_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+        else:
+            frames = []  # Ensure frames is assigned a value in all cases
         if is_moving:
             screen.blit(frames[(frame_counter // FRAME_DURATION) % num_frames_per_direction], player_position)
         else:
@@ -58,13 +62,16 @@ def draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_do
             frames = extract_frames(S_left_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
         elif current_direction == "RIGHT":
             frames = extract_frames(S_right_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+        else:
+            frames = []  # Ensure frames is assigned a value in all cases
         if is_moving:
             screen.blit(frames[(frame_counter // FRAME_DURATION) % num_frames_per_direction], player_position)
         else:
             screen.blit(frames[0], player_position)  # Draw idle frame
 
 
-def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0):
+
+def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0,):
     # Base case: check if we've reached the end of the blocks_positions list
     if index >= len(blocks_positions):
         return
@@ -76,6 +83,8 @@ def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0):
     draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index + 1)
 
     draw_bombs(screen, BLOCK_SPRITE, bombs_list)
+
+    
 
 def draw_row(screen, BLOCK_SPRITE, row, inner_index=0):
     # Base case: check if we've reached the end of the row
@@ -92,5 +101,7 @@ def draw_row(screen, BLOCK_SPRITE, row, inner_index=0):
 def draw_bombs(screen, BOMB_SPRITE, bombs_list):
     # Check if there are any bombs in the list
     if bombs_list:
-        # Draw the first bomb in the list
         screen.blit(BOMB_SPRITE, bombs_list[0])
+
+
+

@@ -16,10 +16,14 @@ from Screens.user_select import render_user_select
 #Main game imports
 from Player.controls import handle_player_actions
 from Player.display import draw_player, draw_blocks
-from Screens.Levels.Level_1 import render_level_1
 from Screens.Levels.Level_constants import *
 from Screens.Levels.Level_Name_Display import render_level_name
+from Screens.Levels.Level_Name_Display2 import render_level_name2
+from Screens.Levels.Level_Name_Display3 import render_level_name3
 
+
+from Entities.key import draw_key
+from Entities.door import draw_door
 from Screens.pause import render_pause
 # ===================================================================== GAME SETUP ======================================================
 pygame.init()
@@ -63,6 +67,8 @@ I_block = pygame.transform.scale(pygame.image.load("Assets/Sprites/Indestructabl
 
 #Key sprite
 Key = pygame.transform.scale(pygame.image.load("Assets/Sprites/Key.png").convert_alpha(), (BLOCK_SIZE,BLOCK_SIZE))
+#DOORWAY
+doorway = pygame.transform.scale(pygame.image.load("Assets/Sprites/doorway.png").convert_alpha(), (BLOCK_SIZE,BLOCK_SIZE))
 #Sprite animations
 B_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 B_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
@@ -76,6 +82,10 @@ K_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_up_spri
 
 S_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 S_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+
+#EXPLOSION
+explosion = pygame.transform.scale(pygame.image.load("Assets/Sprites/explosion.png").convert_alpha(), (3*BLOCK_SIZE,3*BLOCK_SIZE))
+
 
 #Font load
 Hfont = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
@@ -193,7 +203,7 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
            elif current_screen == "name_select":
                if event.key == pygame.K_RETURN:
                 if len(input_text.strip()) > 0:
-                   selected_option = "level_1"
+                   selected_option = "change_level_1"
                    selected_index = input_text
                    return selected_index, selected_option
                elif event.key == pygame.K_BACKSPACE:
@@ -207,43 +217,80 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
 
 
 # ================================================ SCREEN SELECTION HANDLING =============================================================================
-def handle_selected_option(selected_option):
-   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position
+def handle_selected_option(selected_option, previous_screen):
+   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position, holding_key, bombs
    if selected_option == "START":
        return "skin_select" 
+   
    elif selected_option in skin_sprites and current_screen == "skin_select":
        return "name_select"
+   
    elif selected_option == "name_select":
        return "name_select"
+   
+   elif selected_option == "change_level_1":
+       render_level_name(screen, Hfont, HWIDTH, HHEIGHT)
+       return "level_1"
+   elif selected_option == "change_level_2":
+       render_level_name2(screen, Hfont, HWIDTH, HHEIGHT)
+       return "level_2"
+   elif selected_option == "change_level_3":
+       render_level_name3(screen, Hfont, HWIDTH, HHEIGHT)
+       return "level_3"
+   
    elif selected_option == "level_1":
        game_section= "gameplay"
        return "level_1"
+   
+   elif selected_option == "level_2":
+       game_section= "gameplay"
+       return "level_2"
+   
+   elif selected_option == "level_3":
+       game_section= "gameplay"
+       return "level_3"   
+
+   elif selected_option == "win":
+       game_section= "gameplay"
+       return "win"   
+   
    elif selected_option == "SETTINGS":
        return "settings"
+   
    elif selected_option == "MANUAL":
        return "manual"
+   
    elif selected_option == "TOP SCORES":
        return "top_scores"
+   
    elif selected_option == "ABOUT":
        return "about"
+   
    elif selected_option == "MAIN MENU":
        game_section= "intro"
        return "home"
+   
    elif selected_option in ["MOVE UP:", "MOVE DOWN:", "MOVE LEFT:", "MOVE RIGHT:",
                            "DROP BOMB:", "PAUSE:", "MUSIC TOGGLE:", "SELECT:"] and current_screen=="settings":
        return "settings"
+   
    elif selected_option =="PAUSED":
+       previous_screen = current_screen
        game_section= "gameplay"
        return "paused"
+   
    elif selected_option =="RESUME":
        game_section= "gameplay"
-       return "level_1"
+       return previous_screen
+   
    elif selected_option == "EXIT (APPLY CHANGES)":
        selection_locked=False
        if game_section== "gameplay":
         return "paused"
+       
        else:
         return "home"
+       
    elif selected_option == "EXIT":
        if game_section== "gameplay":
         return "paused"
@@ -252,6 +299,7 @@ def handle_selected_option(selected_option):
    elif selected_option == "RESTART (A LIFE WILL BE LOST)":
        player_position = [240,60]
        return "level_1"
+   
    elif selected_option == "MAIN MENU (DATA WILL BE LOST IF PRESSED)":
        player_position = [240,60]
        selected_skin_option = ""
@@ -264,7 +312,7 @@ def handle_selected_option(selected_option):
 # ========================================================================== MAIN CODE LOOP ==================================================================
 
 def main():
-   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter
+   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter, holding_key, bombs, previous_screen
    while RUNNING:
        #Handle exit after pressing x
        handle_quit()
@@ -297,7 +345,7 @@ def main():
        if current_screen == "home":
            Initial_entry = True
            selected_index, selected_option = handle_home_controls(selected_index, Home_options, Settings_options, selected_option)
-           current_screen = handle_selected_option(selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
            render_home(screen, Hbackground, Hfont, HWIDTH,HHEIGHT,selected_index, Home_options)
         #2 ========================================================================= SETTINGS RENDERING ========================================================
        elif current_screen == "settings":
@@ -311,7 +359,7 @@ def main():
                selected_index = 0
                Initial_entry = False           
            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, Settings_options, selected_option)
-           current_screen = handle_selected_option(selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
            if game_section=="intro":   
             render_controls_volume(screen, Mbackground, Hbackground, Hfont, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)
            elif game_section=="gameplay":
@@ -325,7 +373,7 @@ def main():
                y_axis= "IMAGES"
 
            selected_index, selected_option = handle_home_controls(selected_index, pages, Settings_options, selected_option)
-           current_screen = handle_selected_option(selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
            if game_section=="intro":   
                render_manual(screen, Hfont, Mbackground, Hbackground, Manual_1, Manual_2, Manual_3, Manual_4, pages, HWIDTH, HHEIGHT, PAGE_WIDTH, PAGE_HEIGHT, selected_index, y_axis)
            elif game_section=="gameplay":
@@ -336,7 +384,7 @@ def main():
                selected_index = 0
                Initial_entry = False
             selected_index, selected_option = handle_home_controls(selected_index, ["EXIT"], Settings_options, selected_option)
-            current_screen = handle_selected_option(selected_option)
+            current_screen = handle_selected_option(selected_option, previous_screen)
             if game_section=="intro":
                 render_top_scores(screen,Hfont, Mbackground, Hbackground, HWIDTH, HHEIGHT)
             elif game_section=="gameplay":
@@ -347,7 +395,7 @@ def main():
                selected_index = 0
                Initial_entry = False
             selected_index, selected_option = handle_home_controls(selected_index, ["EXIT"], Settings_options, selected_option)
-            current_screen = handle_selected_option(selected_option)
+            current_screen = handle_selected_option(selected_option, previous_screen)
             render_about(screen, Hfont, Mbackground, Hbackground, About, HWIDTH, HHEIGHT, PAGE_WIDTH, PAGE_HEIGHT)
             if game_section=="intro":
                 render_about(screen, Hfont, Mbackground, Hbackground, About, HWIDTH, HHEIGHT, PAGE_WIDTH, PAGE_HEIGHT)
@@ -357,13 +405,13 @@ def main():
        elif current_screen == "skin_select":
             selected_index, selected_option = handle_home_controls(selected_index, skin_sprites, Settings_options, selected_option)
             selected_skin_option = selected_option
-            current_screen = handle_selected_option(selected_option)
+            current_screen = handle_selected_option(selected_option, previous_screen)
             render_user_select(screen,Hfont, Mbackground, Ubackground, skin_sprites, HWIDTH, HHEIGHT,PAGE_WIDTH, PAGE_HEIGHT, selected_index, current_screen, input_text)
        elif current_screen == "name_select":
             selected_option = "name_select"
             selected_index, selected_option = handle_home_controls(selected_index, skin_sprites, Settings_options, selected_option)
             selected_name = selected_index
-            current_screen = handle_selected_option(selected_option)
+            current_screen = handle_selected_option(selected_option, previous_screen)
             render_user_select(screen,Hfont, Mbackground, Ubackground, skin_sprites, HWIDTH, HHEIGHT,PAGE_WIDTH, PAGE_HEIGHT, selected_index, current_screen, input_text)
        #8 ========================================================================= PAUSE SCREEN ========================================================
        elif current_screen == "paused":
@@ -371,18 +419,49 @@ def main():
                selected_index = 0
                Initial_entry = False     
            selected_index, selected_option = handle_home_controls(selected_index, Paused_options, Settings_options, selected_option)
-           current_screen = handle_selected_option(selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
            render_pause(screen, Ubackground, Hfont, TITLE_font, HWIDTH,HHEIGHT,selected_index, Paused_options)
-
+             
        #9 ========================================================================= LEVELS RENDERING =================================================================
        elif current_screen == "level_1":
            frame_counter+=1
            screen.fill((26, 140, 24))
-           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs)
-           player_position, selected_option, is_moving , current_direction= handle_player_actions(Settings_options, player_position, is_moving, current_direction, blocks_positions, bombs_list)
-           current_screen = handle_selected_option(selected_option)
+           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
+           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
+           current_screen = handle_selected_option(selected_option, previous_screen)
            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
            draw_blocks(screen, I_block, blocks_positions)
+           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+           selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+           current_screen = handle_selected_option(selected_option, previous_screen)  
+
+       elif current_screen == "level_2":
+           frame_counter+=1
+           screen.fill((26, 140, 24))
+           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
+           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
+           current_screen = handle_selected_option(selected_option, previous_screen)
+           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
+           draw_blocks(screen, I_block, blocks_positions)
+           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+           selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+           current_screen = handle_selected_option(selected_option, previous_screen)  
+
+       elif current_screen == "level_3":
+           frame_counter+=1
+           screen.fill((26, 140, 24))
+           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
+           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
+           current_screen = handle_selected_option(selected_option, previous_screen)
+           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
+           draw_blocks(screen, I_block, blocks_positions)
+           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+           selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+           current_screen = handle_selected_option(selected_option, previous_screen)  
+
+       elif current_screen == "win":
+           None
+
        #Update
        pygame.display.update()
        clock.tick(60)

@@ -1,6 +1,6 @@
 import pygame
 
-def level_constants(screen, font, WIDTH, HEIGHT, points, lives, time, holding_key, bombs):
+def level_constants(screen, font, WIDTH, HEIGHT, points, lives, time, holding_key, bombs, current_screen):
     # Fill the screen with a solid color (e.g., green for the game background)
     screen.fill((26, 140, 24))  # Green background
 
@@ -16,9 +16,10 @@ def level_constants(screen, font, WIDTH, HEIGHT, points, lives, time, holding_ke
     points_text = font.render(f"Points: {points}", True, (255, 255, 0))  # Yellow text color
     lives_text = font.render(f"Lives: {lives}", True, (255, 255, 0))  # Yellow text color
     time_text = font.render(f"Time: {time}", True, (255, 255, 0))  # Yellow text color
-    key_text = font.render(f"Key: {holding_key}", True, (255, 255, 0))  # Yellow text color
+    key_text = font.render(f"Have Key: ", True, (255, 255, 0))  # Yellow text color
+    key_2_text = font.render(f"{holding_key}", True, (255, 255, 0))  # Yellow text color
     bombs_text = font.render(f"Bombs: {bombs}", True, (255, 255, 0))  # Yellow text color
-
+    level_text = font.render(f"{current_screen}", True, (255, 255, 0))  # Yellow text color
     # Define the positions of the text inside the info box
     text_margin = 140
     points_text_rect = points_text.get_rect(topleft=(10, 10))
@@ -26,6 +27,8 @@ def level_constants(screen, font, WIDTH, HEIGHT, points, lives, time, holding_ke
     bombs_text_rect = bombs_text.get_rect(topleft=(10, lives_text_rect.bottom + text_margin))
     time_text_rect = time_text.get_rect(topleft=(10, bombs_text_rect.bottom + text_margin))  
     key_text_rect = key_text.get_rect(topleft=(10, time_text_rect.bottom + text_margin))  
+    key_2_text_rect = key_text.get_rect(topleft=(10, key_text_rect.bottom) )
+    level_text_rect = key_text.get_rect(topleft=(10, (key_text_rect.bottom + text_margin)))
     
     # Blit the text onto the screen
     screen.blit(points_text, points_text_rect)
@@ -33,3 +36,6 @@ def level_constants(screen, font, WIDTH, HEIGHT, points, lives, time, holding_ke
     screen.blit(bombs_text, bombs_text_rect)
     screen.blit(time_text, time_text_rect)
     screen.blit(key_text, key_text_rect)
+    screen.blit(key_text, key_text_rect)
+    screen.blit(key_2_text, key_2_text_rect)
+    screen.blit(level_text, level_text_rect)

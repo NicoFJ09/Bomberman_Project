@@ -1,6 +1,7 @@
 import pygame
 from var_consts import *
-def handle_player_actions(Settings_options, player_position, is_moving, current_direction, blocks_positions, bombs_list):
+import time
+def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list):
     # By default, no movement
     dx, dy = 0, 0
 
@@ -8,9 +9,9 @@ def handle_player_actions(Settings_options, player_position, is_moving, current_
     keys = pygame.key.get_pressed()
 
     if keys[pygame.key.key_code(Settings_options["PAUSE:"])]:
-        return player_position, "PAUSED", False, current_direction
+        return player_position, current_screen, "PAUSED", False, current_direction
     elif keys[pygame.key.key_code(Settings_options["RESTART:"])]:
-        return [240,60], "RESTART (A LIFE WILL BE LOST)", False, "RIGHT"
+        return [240,60], current_screen, "RESTART (A LIFE WILL BE LOST)", False, "DOWN"
 
     # Handle movement keys
     if keys[pygame.key.key_code(Settings_options["MOVE UP:"])]:
@@ -43,18 +44,34 @@ def handle_player_actions(Settings_options, player_position, is_moving, current_
                 bombs_list.append((player_position[0] + (BLOCK_SIZE-15), player_position[1]))
             elif current_direction == "RIGHT":
                 bombs_list.append((player_position[0] - (BLOCK_SIZE-15), player_position[1]))
+            
+            # Set bomb explosion time
+            global bomb_explosion_time
+            bomb_explosion_time = time.time() + BOMB_DURATION_SECONDS
+        return player_position, current_screen, current_screen, is_moving, current_direction
 
-    
+    # Inside your bomb handling function or main loop
+    current_time = time.time()
+    if bombs_list:
+       
+        # Check if bomb has exploded
+        if current_time >= bomb_explosion_time:
+            # If the bomb's explosion time has passed, remove it
+            bombs_list.clear()  # Remove all elements from the list
+            # Reset bomb explosion time
+            bomb_explosion_time = 0
+            return player_position, current_screen, current_screen, is_moving, current_direction
+
     # Update player position based on movement
     new_x = player_position[0] + dx
     new_y = player_position[1] + dy
 
     # Check for collisions recursively
-    player_position, _, is_moving, current_direction = check_collision(
+    player_position, is_moving, current_direction = check_collision(
         blocks_positions, new_x, new_y, player_position, is_moving, current_direction
     )
 
-    return player_position, "level_1", is_moving, current_direction
+    return player_position, current_screen, current_screen, is_moving, current_direction
 
 
 
@@ -67,7 +84,7 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
         # Ensure new position is within boundaries if there are no collisions
         if 240 <= new_x <= HWIDTH - BLOCK_SIZE and 60 <= new_y <= HHEIGHT - BLOCK_SIZE:
             player_position = (new_x, new_y)
-        return player_position, "level_1", is_moving, current_direction
+        return player_position, is_moving, current_direction
 
     # Calculate the center of the player sprite
     player_center_x = new_x + BLOCK_SIZE // 2
@@ -89,17 +106,7 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     if (player_center_x + hitbox_offset > block_left and player_center_x - hitbox_offset < block_right and
             player_center_y + hitbox_offset > block_top and player_center_y - hitbox_offset < block_bottom):
         # If there's a collision, don't update the player position
-        return player_position, "level_1", is_moving, current_direction
-
-    # Check for collision with the bomb if bombs exist
-    if bombs_list:
-        bomb_center_x = bombs_list[0][0] + BLOCK_SIZE // 2
-        bomb_center_y = bombs_list[0][1] + BLOCK_SIZE // 2
-        if (player_center_x + hitbox_offset > bombs_list[0][0] and player_center_x - hitbox_offset < bombs_list[0][0] + BLOCK_SIZE and
-                player_center_y + hitbox_offset > bombs_list[0][1] and player_center_y - hitbox_offset < bombs_list[0][1] + BLOCK_SIZE):
-            # If there's a collision with the bomb, don't update the player position
-            return player_position, "level_1", is_moving, current_direction
-
+        return player_position,  is_moving, current_direction
 
     # Move to the next block
     inner_index += 1
@@ -109,4 +116,3 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
 
     # Recursively call the function with updated indices
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
-

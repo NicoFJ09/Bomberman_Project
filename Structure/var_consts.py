@@ -11,6 +11,7 @@ game_section= "intro"
 prev_game_section = None
 #Home screen
 current_screen = "home"
+previous_screen = "level_1"
 selected_index = 0
 selected_option = "MAIN MENU"
 Home_options = ["START", "SETTINGS", "MANUAL", "TOP SCORES", "ABOUT"]
@@ -68,7 +69,7 @@ points = 0
 lives = 3
 time = 0
 holding_key= False
-bombs= 10
+bombs= 15
 
 num_frames_per_direction = 3
 current_direction = "RIGHT"
@@ -91,8 +92,15 @@ bombs_list=[]
 
 # Duration of the bomb in seconds
 BOMB_DURATION_SECONDS = 2
-
+bomb_explosion_time = 0
 # Calculate the duration in frames
-BOMB_DURATION_FRAMES = BOMB_DURATION_SECONDS * 60
-bomb_timer = 0
+bomb_explosion_time = None
 bomb_drop=False
+BLAST_RADIUS=1.5
+Bomb_explode=False
+display_explosion = False
+prev_bomb_list_empty = True
+
+
+key_position1, key_position2, key_position3 = (360,180), (360,180), (360,180)
+door_position1, door_position2, door_position3 = (360,300), (360,300), (360,300)
