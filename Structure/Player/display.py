@@ -71,7 +71,7 @@ def draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_do
 
 
 
-def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0,):
+def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0):
     # Base case: check if we've reached the end of the blocks_positions list
     if index >= len(blocks_positions):
         return
@@ -82,10 +82,6 @@ def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0,):
     # Recursively call the function with updated index
     draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index + 1)
 
-    draw_bombs(screen, BLOCK_SPRITE, bombs_list)
-
-    
-
 def draw_row(screen, BLOCK_SPRITE, row, inner_index=0):
     # Base case: check if we've reached the end of the row
     if inner_index >= len(row):
@@ -93,15 +89,30 @@ def draw_row(screen, BLOCK_SPRITE, row, inner_index=0):
     
     # Draw the current block
     x, y = row[inner_index]
-    screen.blit(BLOCK_SPRITE, (x, y))
+    block_rect = pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE)
+    screen.blit(BLOCK_SPRITE, block_rect)
     
     # Recursively call the function with updated inner_index
     draw_row(screen, BLOCK_SPRITE, row, inner_index + 1)
 
-def draw_bombs(screen, BOMB_SPRITE, bombs_list):
+
+def draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter):
     # Check if there are any bombs in the list
-    if bombs_list:
-        screen.blit(BOMB_SPRITE, bombs_list[0])
+    bomb_sprite = None
+    if selected_skin_option == "Bomberman":
+        bomb_sprite = extract_frames(Bbomb_load_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    elif selected_skin_option == "Kirby":
+        bomb_sprite = extract_frames(Kbomb_load_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    elif selected_skin_option == "Samus":
+        bomb_sprite = extract_frames(Sbomb_load_sprite, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    
+    if bombs_list and bomb_sprite:
+        # Calculate the frame index based on the frame counter and bomb duration
+        frame_index = (frame_counter // FRAME_DURATION) % num_frames_per_direction
+        bomb_frame = bomb_sprite[frame_index]
+        
+        # Create a surface to blit the bomb sprite onto
+        bomb_surface = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE), pygame.SRCALPHA)
+        bomb_surface.blit(bomb_frame, (0, 0))  # Blit the bomb frame onto the surface
 
-
-
+        screen.blit(bomb_surface, bombs_list[0])

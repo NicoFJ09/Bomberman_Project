@@ -29,7 +29,7 @@ Settings_options = {
     "SELECT:": 'RETURN', "MUSIC TOGGLE:":"<-ON->", "EXIT (APPLY CHANGES)":""
 }
 
-Paused_options =["RESUME", "SETTINGS", "MANUAL", "TOP SCORES", "ABOUT", "RESTART (A LIFE WILL BE LOST)", "MAIN MENU (DATA WILL BE LOST IF PRESSED)"]
+Paused_options =["RESUME", "SETTINGS", "MANUAL", "TOP SCORES", "ABOUT", "RESTART (WILL RETURN TO LEVEL 1)", "MAIN MENU (DATA WILL BE LOST IF PRESSED)"]
 
 MWIDTH=900 #MENU WIDTH
 MHEIGHT=675 #MENU HEIGHT
@@ -92,14 +92,13 @@ bombs_list=[]
 
 # Duration of the bomb in seconds
 BOMB_DURATION_SECONDS = 2
+EXPLOSION_DURATION_SECONDS =3
 bomb_explosion_time = 0
 # Calculate the duration in frames
-bomb_explosion_time = None
 bomb_drop=False
 BLAST_RADIUS=1.5
 Bomb_explode=False
 display_explosion = False
-prev_bomb_list_empty = True
 
 
 key_position1, key_position2, key_position3 = (360,180), (360,180), (360,180)

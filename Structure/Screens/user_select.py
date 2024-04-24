@@ -59,7 +59,7 @@ def render_user_select(screen,font, Mbackground, Ubackground, skins , HWIDTH, HH
         # Render and display entered text
         entered_text = input_text[:15]  # Limit the input text to 20 characters
         entered_text_surface = font.render(entered_text, True, (91, 101, 113))
-        entered_text_rect = entered_text_surface.get_rect(center=text_box_rect.center)  # Centering the text
+        entered_text_rect = entered_text_surface.get_rect(center= (text_box_rect.centerx , text_box_rect.centery -1))  # Centering the text
         screen.blit(entered_text_surface, entered_text_rect)
         input_text = entered_text
     # Blit the invisible rectangle onto the screen

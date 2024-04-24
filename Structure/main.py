@@ -14,8 +14,8 @@ from Screens.top_scores import render_top_scores
 from Screens.user_select import render_user_select
 
 #Main game imports
-from Player.controls import handle_player_actions
-from Player.display import draw_player, draw_blocks
+from Player.controls import handle_player_actions, handle_bomb_explosion
+from Player.display import draw_player, draw_blocks, draw_bombs
 from Screens.Levels.Level_constants import *
 from Screens.Levels.Level_Name_Display import render_level_name
 from Screens.Levels.Level_Name_Display2 import render_level_name2
@@ -70,22 +70,24 @@ Key = pygame.transform.scale(pygame.image.load("Assets/Sprites/Key.png").convert
 #DOORWAY
 doorway = pygame.transform.scale(pygame.image.load("Assets/Sprites/doorway.png").convert_alpha(), (BLOCK_SIZE,BLOCK_SIZE))
 #Sprite animations
-B_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-B_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-B_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+B_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+B_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+B_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 B_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/B_up_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 
-K_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-K_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-K_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+K_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_down_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+K_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+K_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 K_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_up_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
 
-S_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
-S_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,60))
+S_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+S_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 
 #EXPLOSION
 explosion = pygame.transform.scale(pygame.image.load("Assets/Sprites/explosion.png").convert_alpha(), (3*BLOCK_SIZE,3*BLOCK_SIZE))
-
+Kbomb_load_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Kbomb_load_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+Bbomb_load_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Bbomb_load_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
+Sbomb_load_sprite =  pygame.transform.scale(pygame.image.load("Assets/Sprites/Sbomb_load_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 
 #Font load
 Hfont = pygame.font.Font("Assets/Font/PixeloidSans-Bold.ttf",30)
@@ -210,7 +212,8 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
                    input_text = input_text[:-1]
                else:
                    input_text += event.unicode
-               
+            
+            
    return handle_home_controls(selected_index, options, settings_options, selected_option)
 
 #================================================= PLAYER ACTIONS HANDLING ===============================================================================
@@ -275,7 +278,7 @@ def handle_selected_option(selected_option, previous_screen):
        return "settings"
    
    elif selected_option =="PAUSED":
-       previous_screen = current_screen
+
        game_section= "gameplay"
        return "paused"
    
@@ -296,7 +299,7 @@ def handle_selected_option(selected_option, previous_screen):
         return "paused"
        else:
         return "home"
-   elif selected_option == "RESTART (A LIFE WILL BE LOST)":
+   elif selected_option == "RESTART (WILL RETURN TO LEVEL 1)":
        player_position = [240,60]
        return "level_1"
    
@@ -305,6 +308,7 @@ def handle_selected_option(selected_option, previous_screen):
        selected_skin_option = ""
        selected_name = ""
        input_text = ""
+       game_section= "intro"
        return "home"
 
 
@@ -361,7 +365,7 @@ def main():
            selected_index, selected_option = handle_home_controls(selected_index, Settings_options, Settings_options, selected_option)
            current_screen = handle_selected_option(selected_option, previous_screen)
            if game_section=="intro":   
-            render_controls_volume(screen, Mbackground, Hbackground, Hfont, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)
+               render_controls_volume(screen, Mbackground, Hbackground, Hfont, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)
            elif game_section=="gameplay":
                render_controls_volume(screen, Mbackground, Ubackground, Hfont, HWIDTH, HHEIGHT, MHEIGHT, selected_index, Settings_options, blink)       
        #4 ========================================================================= MANUAL RENDERING ========================================================
@@ -424,37 +428,42 @@ def main():
              
        #9 ========================================================================= LEVELS RENDERING =================================================================
        elif current_screen == "level_1":
+           Initial_entry = True
            frame_counter+=1
-           screen.fill((26, 140, 24))
            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
-           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
-           current_screen = handle_selected_option(selected_option, previous_screen)
+           player_position, current_screen, selected_option,previous_screen, is_moving , current_direction = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, screen)
+
            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
            draw_blocks(screen, I_block, blocks_positions)
+           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+           handle_bomb_explosion(screen, bombs_list)
            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
            selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
            current_screen = handle_selected_option(selected_option, previous_screen)  
-
        elif current_screen == "level_2":
+           Initial_entry = True
            frame_counter+=1
-           screen.fill((26, 140, 24))
            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
-           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
-           current_screen = handle_selected_option(selected_option, previous_screen)
+           player_position, current_screen, selected_option, previous_screen, is_moving , current_direction = handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, screen)
            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
            draw_blocks(screen, I_block, blocks_positions)
+           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+           handle_bomb_explosion(screen, bombs_list)
            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
            selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
            current_screen = handle_selected_option(selected_option, previous_screen)  
 
-       elif current_screen == "level_3":
+           
+       elif current_screen == "level_3s":
+           Initial_entry = True
            frame_counter+=1
-           screen.fill((26, 140, 24))
            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, time, holding_key, bombs, current_screen)
-           player_position, current_screen, selected_option, is_moving , current_direction = handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list)
-           current_screen = handle_selected_option(selected_option, previous_screen)
+           player_position, current_screen, selected_option,previous_screen, is_moving , current_direction= handle_player_actions(Settings_options,current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, screen)
+
            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
            draw_blocks(screen, I_block, blocks_positions)
+           handle_bomb_explosion(screen, bombs_list)
+           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
            selected_option,holding_key, player_position, bombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
            current_screen = handle_selected_option(selected_option, previous_screen)  
