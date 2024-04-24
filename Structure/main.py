@@ -17,13 +17,14 @@ from Screens.top_scores import render_top_scores
 from Screens.user_select import render_user_select
 
 #Main game imports
-from Player.controls import handle_player_actions, handle_bomb_explosion, check_collision
+from Player.controls import handle_player_actions, handle_bomb_explosion, draw_enemies, create_enemy, update_enemy_position
 from Player.display import draw_player, draw_blocks, draw_bombs
 from Screens.Levels.Level_constants import *
 from Screens.Levels.Level_Name_Display import render_level_name
 from Screens.Levels.Level_Name_Display2 import render_level_name2
 from Screens.Levels.Level_Name_Display3 import render_level_name3
-
+from Screens.death import render_GameOver
+from Screens.win import render_Win
 
 from Entities.key import draw_key
 from Entities.door import draw_door
@@ -86,7 +87,9 @@ K_up_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/K_up_spri
 S_left_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_left_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 S_right_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/S_right_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 
-
+#ENEMY ANIMATIONS
+Enemy_1_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Enemy_1_sprite.png").convert_alpha(), (BLOCK_SIZE,BLOCK_SIZE))
+Enemy_2_down_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Enemy_2_down_sprite.png").convert_alpha(), (BLOCK_SIZE,BLOCK_SIZE))
 #bomb
 Kbomb_load_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Kbomb_load_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
 Bbomb_load_sprite = pygame.transform.scale(pygame.image.load("Assets/Sprites/Bbomb_load_sprite.png").convert_alpha(), (BLOCK_SIZE*3,BLOCK_SIZE))
@@ -215,8 +218,14 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
                    input_text = input_text[:-1]
                else:
                    input_text += event.unicode
-            
-            
+
+        #END AND WIN SCREENS
+           elif current_screen == "game_over" or current_screen == "win":
+
+            if event.key == pygame.key.key_code(settings_options["SELECT:"]):
+                selected_option = options[selected_index]
+                return selected_index, selected_option
+
    return handle_home_controls(selected_index, options, settings_options, selected_option)
 
 #================================================= PLAYER ACTIONS HANDLING ===============================================================================
@@ -224,7 +233,7 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
 
 # ================================================ SCREEN SELECTION HANDLING =============================================================================
 def handle_selected_option(selected_option, previous_screen):
-   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position, holding_key, bombs, game_time
+   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position, holding_key, bombs, game_time, lives, enemy_x, enemy_y, enemy2_x, enemy2_y, enemy3_y, enemy3_x, Dblocks_positions1, Dblocks_positions2, Dblocks_positions3
    if selected_option == "START":
        return "skin_select" 
    
@@ -236,12 +245,21 @@ def handle_selected_option(selected_option, previous_screen):
    
    elif selected_option == "change_level_1":
        render_level_name(screen, Hfont, HWIDTH, HHEIGHT)
+       enemy_x, enemy_y = 240, 420  # Adjust the coordinates as needed
+       enemy2_x, enemy2_y = 780, 660
+       enemy3_x, enemy3_y = 960, 120
        return "level_1"
    elif selected_option == "change_level_2":
        render_level_name2(screen, Hfont, HWIDTH, HHEIGHT)
+       enemy_x, enemy_y = 360, 540  # Adjust the coordinates as needed
+       enemy2_x, enemy2_y = 540, 180
+       enemy3_x, enemy3_y = 780, 300
        return "level_2"
    elif selected_option == "change_level_3":
        render_level_name3(screen, Hfont, HWIDTH, HHEIGHT)
+       enemy_x, enemy_y = 540, 180  # Adjust the coordinates as needed
+       enemy2_x, enemy2_y = 960, 120
+       enemy3_x, enemy3_y = 360, 540
        return "level_3"
    
    elif selected_option == "level_1":
@@ -306,9 +324,18 @@ def handle_selected_option(selected_option, previous_screen):
        player_position = [240,60]
        game_time = 0
        return "level_1"
-   
+   elif selected_option == "DEATH":
+       return "game_over"
    elif selected_option == "MAIN MENU (DATA WILL BE LOST IF PRESSED)":
+       Dblocks_positions1= [[(240, 480), (600, 480)], [(300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420)], [(360, 360), (600, 360), (960, 360)], [(240, 300), (300, 300), (420, 300), (960, 300)], [(900, 780), (960, 780), (1080, 780)], [(900, 60), (1080, 60)], [(480, 240), (600, 240), (720, 240), (780, 240), (1080, 240)], [(600, 720), (720, 720)], [(300, 180), (360, 180), (600, 180), (900, 180), (1080, 180)], [(360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660)], [(720, 600)], [(720, 540), (960, 540), (1080, 540)]]
+
+       Dblocks_positions2= [[(240, 480), (600, 480)], [(300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420)], [(360, 360), (600, 360), (960, 360)], [(240, 300), (300, 300), (420, 300), (960, 300)], [(900, 780), (960, 780), (1080, 780)], [(900, 60), (1080, 60)], [(480, 240), (600, 240), (720, 240), (780, 240), (1080, 240)], [(600, 720), (720, 720)], [(300, 180), (360, 180), (600, 180), (900, 180), (1080, 180)], [(360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660)], [(720, 600)], [(720, 540), (960, 540), (1080, 540)]]
+
+       Dblocks_positions3= [[(240, 480), (600, 480)], [(300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420)], [(360, 360), (600, 360), (960, 360)], [(240, 300), (300, 300), (420, 300), (960, 300)], [(900, 780), (960, 780), (1080, 780)], [(900, 60), (1080, 60)], [(480, 240), (600, 240), (720, 240), (780, 240), (1080, 240)], [(600, 720), (720, 720)], [(300, 180), (360, 180), (600, 180), (900, 180), (1080, 180)], [(360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660)], [(720, 600)], [(720, 540), (960, 540), (1080, 540)]]
+
        player_position = [240,60]
+       lives = 3
+       bombs =15
        selected_skin_option = ""
        selected_name = ""
        input_text = ""
@@ -320,11 +347,11 @@ def handle_selected_option(selected_option, previous_screen):
 # ========================================================================== MAIN CODE LOOP ==================================================================
 
 def main():
-   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter, holding_key, bombs, previous_screen, Dblocks_positions1, game_time
+   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter, holding_key, bombs, previous_screen, Dblocks_positions1, game_time, lives, LEVEL_1_ENEMIES, WINNER, W_points
    while RUNNING:
        #Handle exit after pressing x
        handle_quit()
-       
+       global game_time
        game_time += clock.get_rawtime() / 1000
        game_time = round(game_time, 2)
        if game_section != prev_game_section:
@@ -438,60 +465,143 @@ def main():
              
        #9 ========================================================================= LEVELS RENDERING =================================================================
        elif current_screen == "level_1":
-           Initial_entry = True
-           frame_counter+=1
-           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
-           all_blocks_positions = blocks_positions + Dblocks_positions1
-           player_position, current_screen, selected_option,previous_screen, is_moving , current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list)
-           print(bombs)
-           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
-           selected_option,holding_key, player_position, rbombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
-           
-           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
-           draw_blocks(screen, I_block, blocks_positions)
-           
-           draw_blocks(screen, D_block, Dblocks_positions1) #create different patterns and change the sprites from level to level
-           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
-           handle_bomb_explosion(screen, bombs_list, blocks_positions)
+            Initial_entry = True
+            frame_counter += 1
+            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
+            all_blocks_positions = blocks_positions + Dblocks_positions1
+            enemy_rect = create_enemy(enemy_x, enemy_y)
+            enemy_rect2 = create_enemy(enemy2_x, enemy2_y)  # Coordinates for second enemy
+            enemy_rect3 = create_enemy(enemy3_x, enemy3_y)
+            player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, enemy_rect, enemy_rect2, enemy_rect3)
+            
+            
+            # Draw the enemy
+            draw_enemies(screen, enemy_rect, Enemy_1_sprite )
+            draw_enemies(screen, enemy_rect2, Enemy_1_sprite)
+            draw_enemies(screen, enemy_rect3, Enemy_1_sprite)
 
-           
-           current_screen = handle_selected_option(selected_option, previous_screen)  
+            player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+            if (player_rect.colliderect(enemy_rect) or 
+                player_rect.colliderect(enemy_rect2) or 
+                player_rect.colliderect(enemy_rect3)) and not is_colliding_with_enemy:
+                lives -= 1
+                is_colliding_with_enemy = True  # Set the flag to True to indicate the player is currently colliding
+                print(lives)
+            elif not (player_rect.colliderect(enemy_rect) or 
+                    player_rect.colliderect(enemy_rect2) or 
+                    player_rect.colliderect(enemy_rect3)):
+                is_colliding_with_enemy = False  # Reset the flag when the player is no longer colliding
+
+            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+            selected_option, holding_key, player_position, rbombs = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+
+            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite, S_left_sprite, S_right_sprite, current_direction, is_moving, frame_counter)
+            draw_blocks(screen, I_block, blocks_positions)
+
+            draw_blocks(screen, D_block, Dblocks_positions1)  # create different patterns and change the sprites from level to level
+            draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+            lives = handle_bomb_explosion(screen, bombs_list, Dblocks_positions1, player_position, lives)
+            lives = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives)
+            if lives <= 0:
+                selected_option = "DEATH"
+            current_screen = handle_selected_option(selected_option, previous_screen)
        elif current_screen == "level_2":
-           Initial_entry = True
-           frame_counter+=1
-           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
-           all_blocks_positions = blocks_positions + Dblocks_positions1
+            Initial_entry = True
+            frame_counter += 1
+            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
+            all_blocks_positions = blocks_positions + Dblocks_positions2
+            enemy_rect = create_enemy(enemy_x, enemy_y)
+            enemy_rect2 = create_enemy(enemy2_x, enemy2_y)  # Coordinates for second enemy
+            enemy_rect3 = create_enemy(enemy3_x, enemy3_y)
+            player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, enemy_rect, enemy_rect2, enemy_rect3)
+            
+            
+            # Draw the enemy
+            draw_enemies(screen, enemy_rect, Enemy_2_down_sprite )
+            draw_enemies(screen, enemy_rect2, Enemy_2_down_sprite)
+            draw_enemies(screen, enemy_rect3, Enemy_2_down_sprite)
 
-           player_position, current_screen, selected_option,previous_screen, is_moving , current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions , bombs_list)
-           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
-           selected_option,holding_key, player_position, rbombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
-           
-           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
-           draw_blocks(screen, I_block, blocks_positions)
-           #draw_blocks(screen, D_block, Dblocks_positions2)
-           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
-           handle_bomb_explosion(screen, bombs_list, blocks_positions)
+            player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+            if (player_rect.colliderect(enemy_rect) or 
+                player_rect.colliderect(enemy_rect2) or 
+                player_rect.colliderect(enemy_rect3)) and not is_colliding_with_enemy:
+                lives -= 1
+                is_colliding_with_enemy = True  # Set the flag to True to indicate the player is currently colliding
+                print(lives)
+            elif not (player_rect.colliderect(enemy_rect) or 
+                    player_rect.colliderect(enemy_rect2) or 
+                    player_rect.colliderect(enemy_rect3)):
+                is_colliding_with_enemy = False  # Reset the flag when the player is no longer colliding
 
-           current_screen = handle_selected_option(selected_option, previous_screen)  
-           
+            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+            selected_option, holding_key, player_position, rbombs = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+
+            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite, S_left_sprite, S_right_sprite, current_direction, is_moving, frame_counter)
+            draw_blocks(screen, I_block, blocks_positions)
+
+            draw_blocks(screen, D_block, Dblocks_positions2)  # create different patterns and change the sprites from level to level
+            draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+            lives = handle_bomb_explosion(screen, bombs_list, Dblocks_positions2, player_position, lives)
+            lives = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives)
+            if lives <= 0:
+                selected_option = "DEATH"
+            current_screen = handle_selected_option(selected_option, previous_screen)
        elif current_screen == "level_3":
-           Initial_entry = True
-           frame_counter+=1
-           level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
-           all_blocks_positions = blocks_positions + Dblocks_positions1
-           player_position, current_screen, selected_option,previous_screen, is_moving , current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list)
+            Initial_entry = True
+            frame_counter += 1
+            level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, game_time, holding_key, bombs, current_screen)
+            all_blocks_positions = blocks_positions + Dblocks_positions3
+            enemy_rect = create_enemy(enemy_x, enemy_y)
+            enemy_rect2 = create_enemy(enemy2_x, enemy2_y)  # Coordinates for second enemy
+            enemy_rect3 = create_enemy(enemy3_x, enemy3_y)
+            player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, enemy_rect, enemy_rect2, enemy_rect3)
+            
+            
+            # Draw the enemy
+            draw_enemies(screen, enemy_rect, Enemy_1_sprite )
+            draw_enemies(screen, enemy_rect2, Enemy_2_down_sprite)
+            draw_enemies(screen, enemy_rect3, Enemy_1_sprite)
 
-           draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite,S_left_sprite, S_right_sprite,current_direction, is_moving, frame_counter)
-           draw_blocks(screen, I_block, blocks_positions)
-           #draw_blocks(screen, D_block, Dblocks_positions2) 
-           draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
-           handle_bomb_explosion(screen, bombs_list, blocks_positions)
-           holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
-           selected_option,holding_key, player_position, rbombs= draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
-           current_screen = handle_selected_option(selected_option, previous_screen)  
+            player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+            if (player_rect.colliderect(enemy_rect) or 
+                player_rect.colliderect(enemy_rect2) or 
+                player_rect.colliderect(enemy_rect3)) and not is_colliding_with_enemy:
+                lives -= 1
+                is_colliding_with_enemy = True  # Set the flag to True to indicate the player is currently colliding
+                print(lives)
+            elif not (player_rect.colliderect(enemy_rect) or 
+                    player_rect.colliderect(enemy_rect2) or 
+                    player_rect.colliderect(enemy_rect3)):
+                is_colliding_with_enemy = False  # Reset the flag when the player is no longer colliding
+
+            holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
+            selected_option, holding_key, player_position, rbombs = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway)
+
+            draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_down_sprite, B_left_sprite, B_right_sprite, K_up_sprite, K_down_sprite, K_left_sprite, K_right_sprite, S_left_sprite, S_right_sprite, current_direction, is_moving, frame_counter)
+            draw_blocks(screen, I_block, blocks_positions)
+
+            draw_blocks(screen, D_block, Dblocks_positions3)  # create different patterns and change the sprites from level to level
+            draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+            lives = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives)
+            if lives <= 0:
+                selected_option = "DEATH"
+            current_screen = handle_selected_option(selected_option, previous_screen) 
+       elif current_screen == "game_over":
+           if Initial_entry:
+               selected_index = 0
+               Initial_entry = False   
+           render_GameOver(screen, Hfont, Mbackground, Hbackground, HWIDTH, HHEIGHT)
+           selected_index, selected_option = handle_home_controls(selected_index, End_options, Settings_options, selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
        elif current_screen == "win":
-           None
-
+           if Initial_entry:
+               selected_index = 0
+               Initial_entry = False   
+               WINNER = selected_name
+               W_points = points
+           render_Win(screen, Hfont, Mbackground, Hbackground, HWIDTH, HHEIGHT)
+           selected_index, selected_option = handle_home_controls(selected_index, End_options, Settings_options, selected_option)
+           current_screen = handle_selected_option(selected_option, previous_screen)
        #Update
        pygame.display.update()
        clock.tick(60)

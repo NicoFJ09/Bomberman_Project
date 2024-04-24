@@ -1,8 +1,8 @@
 import pygame
 from var_consts import *
 import time
-def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list):
-    global bombs
+def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, enemy_rect, enemy_rect2, enemy_rect3):
+    global bombs, lives
     # By default, no movement
     dx, dy = 0, 0
 
@@ -49,7 +49,13 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     player_position, is_moving, current_direction = check_collision(
         blocks_positions, new_x, new_y, player_position, is_moving, current_direction
     )
-
+    player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+    if player_rect.colliderect(enemy_rect) or player_rect.colliderect(enemy_rect2) or player_rect.colliderect(enemy_rect3):
+        lives -= 1
+        print(lives)
+    update_enemy_position(enemy_rect, player_position, 240, HWIDTH - BLOCK_SIZE - ENEMY_SIZE, is_moving)
+    update_enemy_position(enemy_rect2, player_position, min_distance, max_distance, is_moving)
+    update_enemy_position(enemy_rect3, player_position, min_distance, max_distance, is_moving)
     return player_position, current_screen, current_screen, current_screen, is_moving, current_direction, bombs
 
 
@@ -78,6 +84,8 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
         # If there's a collision, don't update the player position
         return player_position, is_moving, current_direction
 
+
+
     # Move to the next block
     inner_index += 1
     if inner_index >= len(blocks_positions[index]):
@@ -87,8 +95,8 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     # Recursively call the function with updated indices
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list, typeobject):
-    global bomb_explosion_time
+def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives):
+    global bomb_explosion_time, Bomb_explode
     
     # Get the current time
     current_time = time.time()
@@ -101,14 +109,29 @@ def handle_bomb_explosion(screen, bombs_list, typeobject):
         # Draw explosion effect
         draw_explosion(screen, bomb_x, bomb_y, typeobject)
         
+        # Check collision between player and bomb explosion
+        player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+        explosion_rect = pygame.Rect(bomb_x - BLOCK_SIZE, bomb_y - BLOCK_SIZE, 3 * BLOCK_SIZE, 3 * BLOCK_SIZE)
+        # Check if the bomb has exploded
+        if not Bomb_explode:
+            if player_lives > 0 and player_rect.colliderect(explosion_rect):
+                # If there's a collision with bomb explosion, decrement player lives
+                player_lives -= 1
+                # Set the bomb as exploded
+                Bomb_explode = True
+                # If player has no lives left, handle game over condition
+                if player_lives <= 0:
+                    # Handle game over condition here
+                    return player_lives
+        
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
             bombs_list.clear()  # Clear the bombs list after the explosion effect duration
-            
-        return True  # Indicate that the bomb has exploded
-
-    return False
-
+            Bomb_explode = False  # Reset Bomb_exploded back to False
+        print(player_lives)
+        return player_lives
+    
+    return player_lives
 
 def draw_explosion(screen, bomb_x, bomb_y, typeobject):
     # Draw explosion effect (red blocks in all directions)
@@ -149,61 +172,48 @@ def draw_explosion_vertical(screen, bomb_x, bomb_y, offset,typeobject):
     draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject )
 
 def detect_explosion_collision(explosion_rect, typeobject):
-    for block in typeobject:
+    for i, block in enumerate(typeobject):
         for block_x, block_y in block:
             block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
             if explosion_rect.colliderect(block_rect):
+                # Check if the typeobject has less than 12 indexes
+                if len(typeobject) <= 12:
+                    # Delete the block from the typeobject
+                    del typeobject[i]
                 return True  # Collision detected with a block
     return False  # No collision detected with any block
 
 
 
+#========================================= ENEMY SPAWN  ====================================
 
-#========================================= DESTRUCTABLE BLOCKS ====================================
-"""
-def detect_explosion_collision(explosion_rect, typeobject):
-    # Start the recursive process with the first block in the list
-    if not typeobject:
-        return False  # No blocks left to check
+# Function to create enemy rectangle
+def create_enemy(x, y):
+    return pygame.Rect(x, y, ENEMY_SIZE, ENEMY_SIZE)
 
-    # Get the first block in the list
-    block = typeobject[0]
-    return detect_explosion_collision_recursive(explosion_rect, block) or detect_explosion_collision(explosion_rect, typeobject[1:])
+# Function to draw enemies
+def draw_enemies(screen, enemy_rect, enemy_image):
+    screen.blit(enemy_image, enemy_rect)
+def update_enemy_position(enemy_rect, player_position, min_distance, max_distance, is_player_moving):
+    global ENEMY_SPEED, enemy_direction
 
-def detect_explosion_collision_recursive(explosion_rect, block):
-    if not block:
-        return False  # No more coordinates in this block
+    # Check if the player is moving
+    if is_player_moving:
+        # Check the relative position of the player and the enemy
+        if enemy_rect.x < player_position[0]:
+            enemy_direction = 'right'
+        elif enemy_rect.x > player_position[0]:
+            enemy_direction = 'left'
 
-    # Get the first coordinate in the block
-    block_x, block_y = block[0]
-
-    # Check collision with the explosion rectangle
-    block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
-    if explosion_rect.colliderect(block_rect):
-        return True  # Collision detected with this block
-
-    # Recursively check the rest of the coordinates in this block
-    return detect_explosion_collision_recursive(explosion_rect, block[1:])
-
-"""
-
-
-
-"""
-def destroy_blocks(explosion_rect, typeobject):
-    for block in typeobject:
-        for block_x, block_y in block:
-            block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
-            if explosion_rect.colliderect(block_rect):
-                typeobject.remove(block)  # Remove the block when hit by the explosion
-                break  # Stop further checking for this block
-
-def destroy_blocks_in_explosion(bomb_x, bomb_y, typeobject):
-    # Create explosion rectangles for horizontal and vertical directions
-    horizontal_explosion_rect = pygame.Rect(bomb_x - BLOCK_SIZE, bomb_y, 3 * BLOCK_SIZE, BLOCK_SIZE)
-    vertical_explosion_rect = pygame.Rect(bomb_x, bomb_y - BLOCK_SIZE, BLOCK_SIZE, 3 * BLOCK_SIZE)
-    
-    # Destroy blocks in the explosion range
-    destroy_blocks(horizontal_explosion_rect, typeobject)
-    destroy_blocks(vertical_explosion_rect, typeobject)
-"""
+        # Move the enemy based on its current direction
+        if enemy_direction == 'right':
+            enemy_rect.x += ENEMY_SPEED * ENEMY_SIZE
+            # Check if the enemy has reached the maximum distance
+            if enemy_rect.x > max_distance:
+                enemy_rect.x = max_distance
+        elif enemy_direction == 'left':
+            enemy_rect.x -= ENEMY_SPEED * ENEMY_SIZE
+            # Check if the enemy has reached the minimum distance
+            if enemy_rect.x < min_distance:
+                enemy_rect.x = min_distance
+    return enemy_rect

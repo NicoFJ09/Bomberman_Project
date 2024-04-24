@@ -1,6 +1,6 @@
 import pygame
 
-def render_GameOver(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT):
+def render_Win(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT):
     # Background slightly gray coated
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     overlay.fill((128, 128, 128, 128))
@@ -13,7 +13,7 @@ def render_GameOver(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT):
     screen.blit(Mbackground, settings_bg_rect)
 
     # Render text for "FIN DEL JUEGO" title
-    title_text = "FIN DEL JUEGO"
+    title_text = "GANASTE!"
     title_surface = font.render(title_text, True, (26, 140, 24))  # Default color
     title_text_rect = title_surface.get_rect(midtop=(WIDTH / 2, HEIGHT / 4))
     title_text_rect.y -= title_surface.get_height()
