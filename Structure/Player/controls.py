@@ -1,8 +1,8 @@
 import pygame
 from var_consts import *
 import time
-def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list,screen):
-    global bomb_explosion_time
+def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list):
+    global bombs
     # By default, no movement
     dx, dy = 0, 0
 
@@ -11,6 +11,7 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
 
     if keys[pygame.key.key_code(Settings_options["PAUSE:"])]:
         return player_position, "PAUSED", "paused", current_screen, False, current_direction
+
     # Handle movement keys
     if keys[pygame.key.key_code(Settings_options["MOVE UP:"])]:
         dy = -1 * PLAYER_SPEED
@@ -30,18 +31,14 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
         is_moving = True
     else:
         is_moving = False
+
     # Handle bomb placement
-    if keys[pygame.key.key_code(Settings_options["DROP BOMB:"])]:
-        if not bombs_list:
-            # Adjust bomb placement based on current direction
-                bombs_list.append(((round(player_position[0]/BLOCK_SIZE)*BLOCK_SIZE , (round(player_position[1]/BLOCK_SIZE))*BLOCK_SIZE)))
-                print((((round(player_position[0]/BLOCK_SIZE)*BLOCK_SIZE) , (round(player_position[1]/BLOCK_SIZE))*BLOCK_SIZE)))
-            # Set bomb explosion time
-                global bomb_explosion_time
-                bomb_explosion_time = time.time()
-        return player_position, current_screen, current_screen, current_screen,is_moving, current_direction
-
-
+    if bombs > 0 and keys[pygame.key.key_code(Settings_options["DROP BOMB:"])] and not bombs_list:
+        bombs_list.append(((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE)))
+        bombs -= 1
+        print("Bombs left:", bombs)
+        global bomb_explosion_time
+        bomb_explosion_time = time.time()
 
 
     # Update player position based on movement
@@ -53,7 +50,7 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
         blocks_positions, new_x, new_y, player_position, is_moving, current_direction
     )
 
-    return player_position, current_screen, current_screen, current_screen, is_moving, current_direction
+    return player_position, current_screen, current_screen, current_screen, is_moving, current_direction, bombs
 
 
 
@@ -90,7 +87,7 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     # Recursively call the function with updated indices
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list):
+def handle_bomb_explosion(screen, bombs_list, typeobject):
     global bomb_explosion_time
     
     # Get the current time
@@ -102,7 +99,7 @@ def handle_bomb_explosion(screen, bombs_list):
         bomb_x, bomb_y = bombs_list[0]
         
         # Draw explosion effect
-        draw_explosion(screen, bomb_x, bomb_y)
+        draw_explosion(screen, bomb_x, bomb_y, typeobject)
         
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
@@ -113,19 +110,19 @@ def handle_bomb_explosion(screen, bombs_list):
     return False
 
 
-def draw_explosion(screen, bomb_x, bomb_y):
+def draw_explosion(screen, bomb_x, bomb_y, typeobject):
     # Draw explosion effect (red blocks in all directions)
     explosion_range = BLOCK_SIZE-1  # The range of the explosion
     
     # Draw explosion horizontally
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, -explosion_range)
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, explosion_range)
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, -explosion_range, typeobject)
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, explosion_range, typeobject)
     
     # Draw explosion vertically
-    draw_explosion_vertical(screen, bomb_x, bomb_y, -explosion_range)
-    draw_explosion_vertical(screen, bomb_x, bomb_y, explosion_range)
+    draw_explosion_vertical(screen, bomb_x, bomb_y, -explosion_range, typeobject)
+    draw_explosion_vertical(screen, bomb_x, bomb_y, explosion_range, typeobject)
 
-def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset):
+def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset, typeobject):
     # Base case: if offset exceeds the explosion range, stop drawing horizontally
     if abs(offset) > BLOCK_SIZE:
         return
@@ -133,12 +130,12 @@ def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset):
     # Draw the explosion block horizontally
     explosion_rect = pygame.Rect(bomb_x + offset, bomb_y + BLOCK_SIZE // 4, BLOCK_SIZE, BLOCK_SIZE // 2)
     
-    if not detect_explosion_collision(explosion_rect):
+    if not detect_explosion_collision(explosion_rect,typeobject):
         pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
 
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, offset + BLOCK_SIZE)
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject)
 
-def draw_explosion_vertical(screen, bomb_x, bomb_y, offset):
+def draw_explosion_vertical(screen, bomb_x, bomb_y, offset,typeobject):
     # Base case: if offset exceeds the explosion range, stop drawing vertically
     if abs(offset) > BLOCK_SIZE:
         return
@@ -146,16 +143,67 @@ def draw_explosion_vertical(screen, bomb_x, bomb_y, offset):
     # Draw the explosion block vertically
     explosion_rect = pygame.Rect(bomb_x + BLOCK_SIZE // 4, bomb_y + offset, BLOCK_SIZE // 2, BLOCK_SIZE)
     
-    if not detect_explosion_collision(explosion_rect):
+    if not detect_explosion_collision(explosion_rect,typeobject):
         pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
     
-    draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE)
+    draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject )
 
-def detect_explosion_collision(explosion_rect):
-    for block in blocks_positions:
+def detect_explosion_collision(explosion_rect, typeobject):
+    for block in typeobject:
         for block_x, block_y in block:
             block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
             if explosion_rect.colliderect(block_rect):
                 return True  # Collision detected with a block
     return False  # No collision detected with any block
 
+
+
+
+#========================================= DESTRUCTABLE BLOCKS ====================================
+"""
+def detect_explosion_collision(explosion_rect, typeobject):
+    # Start the recursive process with the first block in the list
+    if not typeobject:
+        return False  # No blocks left to check
+
+    # Get the first block in the list
+    block = typeobject[0]
+    return detect_explosion_collision_recursive(explosion_rect, block) or detect_explosion_collision(explosion_rect, typeobject[1:])
+
+def detect_explosion_collision_recursive(explosion_rect, block):
+    if not block:
+        return False  # No more coordinates in this block
+
+    # Get the first coordinate in the block
+    block_x, block_y = block[0]
+
+    # Check collision with the explosion rectangle
+    block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+    if explosion_rect.colliderect(block_rect):
+        return True  # Collision detected with this block
+
+    # Recursively check the rest of the coordinates in this block
+    return detect_explosion_collision_recursive(explosion_rect, block[1:])
+
+"""
+
+
+
+"""
+def destroy_blocks(explosion_rect, typeobject):
+    for block in typeobject:
+        for block_x, block_y in block:
+            block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+            if explosion_rect.colliderect(block_rect):
+                typeobject.remove(block)  # Remove the block when hit by the explosion
+                break  # Stop further checking for this block
+
+def destroy_blocks_in_explosion(bomb_x, bomb_y, typeobject):
+    # Create explosion rectangles for horizontal and vertical directions
+    horizontal_explosion_rect = pygame.Rect(bomb_x - BLOCK_SIZE, bomb_y, 3 * BLOCK_SIZE, BLOCK_SIZE)
+    vertical_explosion_rect = pygame.Rect(bomb_x, bomb_y - BLOCK_SIZE, BLOCK_SIZE, 3 * BLOCK_SIZE)
+    
+    # Destroy blocks in the explosion range
+    destroy_blocks(horizontal_explosion_rect, typeobject)
+    destroy_blocks(vertical_explosion_rect, typeobject)
+"""

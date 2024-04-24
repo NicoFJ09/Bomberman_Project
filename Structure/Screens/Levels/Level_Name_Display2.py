@@ -18,3 +18,4 @@ def render_level_name2(screen, font, WIDTH, HEIGHT):
 
     # Wait for a few seconds (e.g., 3 seconds)
     pygame.time.wait(3000)  # 3000 milliseconds = 3 seconds
+

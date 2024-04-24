@@ -27,7 +27,7 @@ def draw_door(screen, holding_key, player_position, door_position1, door_positio
             # You can add code here for additional levels if needed
             holding_key=False
             player_position = [240,60]
-            bombs= 10
+            bombs= 15
             return "win", holding_key, player_position, bombs
     
     # Blit the door on the screen

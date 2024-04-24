@@ -71,16 +71,16 @@ def draw_player(screen, player_position, selected_skin_option, B_up_sprite, B_do
 
 
 
-def draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index=0):
-    # Base case: check if we've reached the end of the blocks_positions list
-    if index >= len(blocks_positions):
+def draw_blocks(screen, BLOCK_SPRITE, typeobject, index=0):
+    # Base case: check if we've reached the end of the typeobject list
+    if index >= len(typeobject):
         return
     
     # Draw the current row
-    draw_row(screen, BLOCK_SPRITE, blocks_positions[index])
+    draw_row(screen, BLOCK_SPRITE, typeobject[index])
     
     # Recursively call the function with updated index
-    draw_blocks(screen, BLOCK_SPRITE, blocks_positions, index + 1)
+    draw_blocks(screen, BLOCK_SPRITE, typeobject, index + 1)
 
 def draw_row(screen, BLOCK_SPRITE, row, inner_index=0):
     # Base case: check if we've reached the end of the row
