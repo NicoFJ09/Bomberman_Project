@@ -1,8 +1,8 @@
 import pygame
 
-def level_constants(screen, font, WIDTH, HEIGHT, points, lives, game_time, holding_key, bombs, current_screen):
+def level_constants(screen, font, WIDTH, HEIGHT, points, lives, minutes, seconds, holding_key, bombs, current_screen):
     # Fill the screen with a solid color (e.g., green for the game background)
-    screen.fill((26, 140, 24))  # Green background
+
 
     # Define the dimensions and position of the info box
     info_box_width = 180
@@ -15,7 +15,7 @@ def level_constants(screen, font, WIDTH, HEIGHT, points, lives, game_time, holdi
     # Render text for the information to display inside the box
     points_text = font.render(f"Points: {points}", True, (255, 255, 0))  # Yellow text color
     lives_text = font.render(f"Lives: {lives}", True, (255, 255, 0))  # Yellow text color
-    time_text = font.render(f"Time: {game_time}", True, (255, 255, 0))  # Yellow text color
+    time_text = font.render(f"Time: {minutes}:{seconds}", True, (255, 255, 0))  # Yellow text color
     key_text = font.render(f"Have Key: ", True, (255, 255, 0))  # Yellow text color
     key_2_text = font.render(f"{holding_key}", True, (255, 255, 0))  # Yellow text color
     bombs_text = font.render(f"Bombs: {bombs}", True, (255, 255, 0))  # Yellow text color

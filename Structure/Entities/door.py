@@ -1,6 +1,5 @@
 from var_consts import *
 def draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, Door):
-    global bombs
     # Define door rectangles outside the if statement
     door_rect1 = pygame.Rect(door_position1[0], door_position1[1], BLOCK_SIZE, BLOCK_SIZE)
     door_rect2 = pygame.Rect(door_position2[0], door_position2[1], BLOCK_SIZE, BLOCK_SIZE)
@@ -13,22 +12,19 @@ def draw_door(screen, holding_key, player_position, door_position1, door_positio
             # Transition to the next level if holding the key
             holding_key=False
             player_position = [240,60]
-            bombs= 10
-            return "change_level_2", holding_key, player_position, bombs
+            return "change_level_2", holding_key, player_position
     elif current_screen == "level_2":
         if player_rect.colliderect(door_rect2) and holding_key:
             # Transition to the next level if holding the key
             holding_key=False
             player_position = [240,60]
-            bombs= 10
-            return "change_level_3", holding_key, player_position, bombs
+            return "change_level_3", holding_key, player_position
     elif current_screen == "level_3":
         if player_rect.colliderect(door_rect3) and holding_key:
             # You can add code here for additional levels if needed
             holding_key=False
             player_position = [240,60]
-            bombs= 15
-            return "win", holding_key, player_position, bombs
+            return "win", holding_key, player_position
     
     # Blit the door on the screen
     if current_screen == "level_1":
@@ -39,4 +35,4 @@ def draw_door(screen, holding_key, player_position, door_position1, door_positio
         screen.blit(Door, door_position3)
     
     # If no transition occurred, return the current screen
-    return current_screen, holding_key, player_position, bombs
+    return current_screen, holding_key, player_position

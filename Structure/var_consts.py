@@ -25,13 +25,11 @@ Settings_options = {
     "MOVE RIGHT:": "D",
     "DROP BOMB:": 'SPACE',
     "PAUSE:": "P",
-    "RESTART:": "R",
     "SELECT:": 'RETURN', "MUSIC TOGGLE:":"<-ON->", "EXIT (APPLY CHANGES)":""
 }
 
 Paused_options =["RESUME", "SETTINGS", "MANUAL", "TOP SCORES", "ABOUT", "RESTART (WILL RETURN TO LEVEL 1)", "MAIN MENU (DATA WILL BE LOST IF PRESSED)"]
 
-End_options = ["MAIN MENU (DATA WILL BE LOST IF PRESSED)"]
 
 MWIDTH=900 #MENU WIDTH
 MHEIGHT=675 #MENU HEIGHT
@@ -70,7 +68,9 @@ BLOCK_SIZE=60
 
 points = 0
 lives = 3
-time = 0
+game_time=0
+minutes = 0
+seconds = 0
 holding_key= False
 bombs= 15
 
@@ -131,6 +131,8 @@ door_position1, door_position2, door_position3 = (360,300), (360,300), (360,300)
 
 
 #============================ ENEMY HANDLING==================================
+#manage later for now achieve good block collisions, point management, unique maps, leader boards
+
 ENEMY_SIZE = 60  # Width and height of the enemy block or sprite
 ENEMY_SPEED = 2  # Speed at which the enemy moves
 

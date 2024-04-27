@@ -1,8 +1,10 @@
 import pygame
 from var_consts import *
 import time
-def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, enemy_rect, enemy_rect2, enemy_rect3):
-    global bombs, lives
+
+#=====================================================PLAYER CONTROL AND ENTITIES COLISSION MANAGEMENT=================================================================
+
+def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, bombs):
     # By default, no movement
     dx, dy = 0, 0
 
@@ -10,7 +12,7 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     keys = pygame.key.get_pressed()
 
     if keys[pygame.key.key_code(Settings_options["PAUSE:"])]:
-        return player_position, "PAUSED", "paused", current_screen, False, current_direction
+        return player_position, "PAUSED", "paused", current_screen, False, current_direction, bombs
 
     # Handle movement keys
     if keys[pygame.key.key_code(Settings_options["MOVE UP:"])]:
@@ -36,7 +38,6 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     if bombs > 0 and keys[pygame.key.key_code(Settings_options["DROP BOMB:"])] and not bombs_list:
         bombs_list.append(((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE)))
         bombs -= 1
-        print("Bombs left:", bombs)
         global bomb_explosion_time
         bomb_explosion_time = time.time()
 
@@ -49,13 +50,7 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     player_position, is_moving, current_direction = check_collision(
         blocks_positions, new_x, new_y, player_position, is_moving, current_direction
     )
-    player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
-    if player_rect.colliderect(enemy_rect) or player_rect.colliderect(enemy_rect2) or player_rect.colliderect(enemy_rect3):
-        lives -= 1
-        print(lives)
-    update_enemy_position(enemy_rect, player_position, 240, HWIDTH - BLOCK_SIZE - ENEMY_SIZE, is_moving)
-    update_enemy_position(enemy_rect2, player_position, min_distance, max_distance, is_moving)
-    update_enemy_position(enemy_rect3, player_position, min_distance, max_distance, is_moving)
+
     return player_position, current_screen, current_screen, current_screen, is_moving, current_direction, bombs
 
 
@@ -95,7 +90,7 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     # Recursively call the function with updated indices
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives):
+def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock):
     global bomb_explosion_time, Bomb_explode
     
     # Get the current time
@@ -111,10 +106,16 @@ def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, playe
         
         # Check collision between player and bomb explosion
         player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
-        explosion_rect = pygame.Rect(bomb_x - BLOCK_SIZE, bomb_y - BLOCK_SIZE, 3 * BLOCK_SIZE, 3 * BLOCK_SIZE)
+
+        # Horizontal explosion rectangle
+        explosion_rect_horizontal = pygame.Rect(bomb_x - BLOCK_SIZE, bomb_y, 3 * BLOCK_SIZE, BLOCK_SIZE)
+
+        # Vertical explosion rectangle
+        explosion_rect_vertical = pygame.Rect(bomb_x, bomb_y - BLOCK_SIZE, BLOCK_SIZE, 3 * BLOCK_SIZE)
+
         # Check if the bomb has exploded
         if not Bomb_explode:
-            if player_lives > 0 and player_rect.colliderect(explosion_rect):
+            if player_lives > 0 and (player_rect.colliderect(explosion_rect_horizontal) or player_rect.colliderect(explosion_rect_vertical)):
                 # If there's a collision with bomb explosion, decrement player lives
                 player_lives -= 1
                 # Set the bomb as exploded
@@ -122,16 +123,21 @@ def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, playe
                 # If player has no lives left, handle game over condition
                 if player_lives <= 0:
                     # Handle game over condition here
-                    return player_lives
-        
+                    return player_lives, Dblock
+            # Iterate over the blocks in Dblock and check for collision with explosion
+            # Remove collided blocks from Dblock
+            remove_collided_blocks(explosion_rect_horizontal, Dblock)
+            remove_collided_blocks(explosion_rect_vertical, Dblock)
+            Bomb_explode = True
+            return player_lives, Dblock
+                
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
             bombs_list.clear()  # Clear the bombs list after the explosion effect duration
             Bomb_explode = False  # Reset Bomb_exploded back to False
-        print(player_lives)
-        return player_lives
+        return player_lives, Dblock
     
-    return player_lives
+    return player_lives, Dblock
 
 def draw_explosion(screen, bomb_x, bomb_y, typeobject):
     # Draw explosion effect (red blocks in all directions)
@@ -153,7 +159,7 @@ def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset, typeobject):
     # Draw the explosion block horizontally
     explosion_rect = pygame.Rect(bomb_x + offset, bomb_y + BLOCK_SIZE // 4, BLOCK_SIZE, BLOCK_SIZE // 2)
     
-    if not detect_explosion_collision(explosion_rect,typeobject):
+    if not detect_explosion_collision(explosion_rect):
         pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
 
     draw_explosion_horizontal(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject)
@@ -166,54 +172,69 @@ def draw_explosion_vertical(screen, bomb_x, bomb_y, offset,typeobject):
     # Draw the explosion block vertically
     explosion_rect = pygame.Rect(bomb_x + BLOCK_SIZE // 4, bomb_y + offset, BLOCK_SIZE // 2, BLOCK_SIZE)
     
-    if not detect_explosion_collision(explosion_rect,typeobject):
+    if not detect_explosion_collision(explosion_rect):
         pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
     
     draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject )
 
-def detect_explosion_collision(explosion_rect, typeobject):
-    for i, block in enumerate(typeobject):
-        for block_x, block_y in block:
-            block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
-            if explosion_rect.colliderect(block_rect):
-                # Check if the typeobject has less than 12 indexes
-                if len(typeobject) <= 12:
-                    # Delete the block from the typeobject
-                    del typeobject[i]
-                return True  # Collision detected with a block
-    return False  # No collision detected with any block
+def detect_explosion_collision_aux(explosion_rect, row_index=0, col_index=0):
+    # Base case: if all rows have been checked
+    if row_index >= len(blocks_positions):
+        return False  # No collision detected with any block
+    
+    # Base case: if all columns within the current row have been checked
+    if col_index >= len(blocks_positions[row_index]):
+        # Move to the next row
+        return detect_explosion_collision_aux(explosion_rect, row_index + 1, 0)
+    
+    # Extract the block position
+    block_x, block_y = blocks_positions[row_index][col_index]
+    
+    # Create the block rectangle
+    block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+    
+    # Check collision
+    if explosion_rect.colliderect(block_rect):
+        return True  # Collision detected with a block
+    else:
+        # Recursive call to check the next column within the current row
+        return detect_explosion_collision_aux(explosion_rect, row_index, col_index + 1)
+
+# Wrapper function to start the recursion
+def detect_explosion_collision(explosion_rect):
+    return detect_explosion_collision_aux(explosion_rect)
+
+def remove_collided_blocks(explosion_rect, Dblock):
+    # Helper function to recursively remove collided blocks
+    def remove_blocks_recursive(block_list, index=0):
+        # Base case: if the index exceeds the length of the block list, return
+        if index >= len(block_list):
+            return
+
+        # Get the current block position
+        block_position = block_list[index]
+        block_rect = pygame.Rect(block_position[0], block_position[1], BLOCK_SIZE, BLOCK_SIZE)
+
+        # If the block collides with the explosion rectangle, remove it
+        if block_rect.colliderect(explosion_rect):
+            if block_position in block_list:
+                block_list.remove(block_position)
+            # Adjust the index after removing the block
+            index -= 1
+
+        # Move to the next block position by making a recursive call with the updated index
+        remove_blocks_recursive(block_list, index + 1)
+
+    # Helper function to apply remove_blocks_recursive to each block list in Dblock
+    def apply_to_dblock(block_index=0):
+        if block_index >= len(Dblock):
+            return
+        remove_blocks_recursive(Dblock[block_index])
+        apply_to_dblock(block_index + 1)
+
+    # Start the recursion by passing the first block list in Dblock
+    apply_to_dblock()
 
 
 
-#========================================= ENEMY SPAWN  ====================================
-
-# Function to create enemy rectangle
-def create_enemy(x, y):
-    return pygame.Rect(x, y, ENEMY_SIZE, ENEMY_SIZE)
-
-# Function to draw enemies
-def draw_enemies(screen, enemy_rect, enemy_image):
-    screen.blit(enemy_image, enemy_rect)
-def update_enemy_position(enemy_rect, player_position, min_distance, max_distance, is_player_moving):
-    global ENEMY_SPEED, enemy_direction
-
-    # Check if the player is moving
-    if is_player_moving:
-        # Check the relative position of the player and the enemy
-        if enemy_rect.x < player_position[0]:
-            enemy_direction = 'right'
-        elif enemy_rect.x > player_position[0]:
-            enemy_direction = 'left'
-
-        # Move the enemy based on its current direction
-        if enemy_direction == 'right':
-            enemy_rect.x += ENEMY_SPEED * ENEMY_SIZE
-            # Check if the enemy has reached the maximum distance
-            if enemy_rect.x > max_distance:
-                enemy_rect.x = max_distance
-        elif enemy_direction == 'left':
-            enemy_rect.x -= ENEMY_SPEED * ENEMY_SIZE
-            # Check if the enemy has reached the minimum distance
-            if enemy_rect.x < min_distance:
-                enemy_rect.x = min_distance
-    return enemy_rect
+#========================================= BLOCK DESTRUCTION  ====================================
