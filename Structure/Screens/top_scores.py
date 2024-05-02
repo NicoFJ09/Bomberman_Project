@@ -80,13 +80,3 @@ def get_file_path():
     # Create the file path relative to the parent directory
     file_path = os.path.join(parent_directory, 'scores.txt')
     return file_path
-
-# Test the function
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-font = pygame.font.Font(None, 36)
-Mbackground = pygame.Surface((400, 300))
-Hbackground = pygame.Surface((800, 600))
-HWIDTH, HHEIGHT = 800, 600
-render_top_scores(screen, font, Mbackground, Hbackground, HWIDTH, HHEIGHT)
-pygame.display.flip()

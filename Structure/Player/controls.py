@@ -37,7 +37,6 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     # Handle bomb placement
     if bombs > 0 and keys[pygame.key.key_code(Settings_options["DROP BOMB:"])] and not bombs_list:
         bombs_list.append(((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE)))
-        print((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE))
         bombs -= 1
         global bomb_explosion_time
         bomb_explosion_time = time.time()
@@ -92,20 +91,20 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
 
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock, points, enemy_position):
+def handle_bomb_explosion(screen, bombs_list, explosion_sprite_sheet, player_position, player_lives, Dblock, points, enemy_position):
     global bomb_explosion_time, Bomb_explode
-    
+
     # Get the current time
     current_time = time.time()
-    
+
     # Check if there is a bomb and if its explosion time has passed
     if bombs_list and current_time >= bomb_explosion_time + BOMB_DURATION_SECONDS:
         # Get the bomb position
         bomb_x, bomb_y = bombs_list[0]
-        
+
         # Draw explosion effect
-        draw_explosion(screen, bomb_x, bomb_y, typeobject)
-        
+        draw_explosion(screen, bomb_x, bomb_y, explosion_sprite_sheet)
+
         # Check collision between player and bomb explosion
         player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
 
@@ -115,77 +114,90 @@ def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, playe
         # Vertical explosion rectangle
         explosion_rect_vertical = pygame.Rect(bomb_x, bomb_y - BLOCK_SIZE, BLOCK_SIZE, 3 * BLOCK_SIZE)
 
+        enemy_rect = pygame.Rect(enemy_position["x"], enemy_position["y"], ENEMY_SIZE, ENEMY_SIZE)
+        # Flag to track if player is hit by explosion
+        player_hit = False
+        enemy_hit = False
+
         # Check if the bomb has exploded
         if not Bomb_explode:
+
+            # Remove collided blocks
+            points = remove_collided_blocks(explosion_rect_horizontal, Dblock, points)
+            points = remove_collided_blocks(explosion_rect_vertical, Dblock, points)
+            
+            # Check for player collision with bomb explosion
             if player_lives > 0 and (player_rect.colliderect(explosion_rect_horizontal) or player_rect.colliderect(explosion_rect_vertical)):
                 # If there's a collision with bomb explosion, decrement player lives
                 player_lives -= 1
-                # Set the bomb as exploded
-                Bomb_explode = True
-                # If player has no lives left, handle game over condition
-                if player_lives <= 0:
-                    # Handle game over condition here
-                    return player_lives, Dblock, points, enemy_position
-            # Iterate over the blocks in Dblock and check for collision with explosion
-            # Remove collided blocks from Dblock
-            points = remove_collided_blocks(explosion_rect_horizontal, Dblock, points)
-            points = remove_collided_blocks(explosion_rect_vertical, Dblock, points)
-            # If the bomb hits the game bot, set its position outside the screen
-            if enemy_position is not None:
-                enemy_rect = pygame.Rect(enemy_position["x"], enemy_position["y"], ENEMY_SIZE, ENEMY_SIZE)
-                if enemy_rect.colliderect(explosion_rect_horizontal) or enemy_rect.colliderect(explosion_rect_vertical):
-                    direction = enemy_position["direction"]
-                    enemy_position = {"x": -ENEMY_SIZE, "y": -ENEMY_SIZE, "direction": direction}
-                    Bomb_explode = True
-                    points+=1000
-            return player_lives, Dblock, points, enemy_position
-                
+                player_hit = True  # Set flag to True
+                Bomb_explode= True
+            if enemy_rect.colliderect(explosion_rect_horizontal) or enemy_rect.colliderect(explosion_rect_vertical):
+                direction = enemy_position["direction"]
+                enemy_position = {"x": -2*ENEMY_SIZE, "y": -2*ENEMY_SIZE, "direction": direction}
+                points += 1000
+                enemy_hit = True
+                Bomb_explode= True
+
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
             bombs_list.clear()  # Clear the bombs list after the explosion effect duration
             Bomb_explode = False  # Reset Bomb_exploded back to False
-        return player_lives, Dblock, points, enemy_position
-    
-    # Add a default return statement if no other conditions are met
+
+        # If player or enemy is hit by explosion, return immediately
+        if player_hit or enemy_hit:
+            return player_lives, Dblock, points, enemy_position
+
+    # Add a default return statement
     return player_lives, Dblock, points, enemy_position
-    
-def draw_explosion(screen, bomb_x, bomb_y, typeobject):
+
+def draw_explosion(screen, bomb_x, bomb_y, explosion_sprite_sheet):
     # Draw explosion effect (red blocks in all directions)
     explosion_range = BLOCK_SIZE-1  # The range of the explosion
     
     # Draw explosion horizontally
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, -explosion_range, typeobject)
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, explosion_range, typeobject)
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, -explosion_range, explosion_sprite_sheet)
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, explosion_range, explosion_sprite_sheet)
     
     # Draw explosion vertically
-    draw_explosion_vertical(screen, bomb_x, bomb_y, -explosion_range, typeobject)
-    draw_explosion_vertical(screen, bomb_x, bomb_y, explosion_range, typeobject)
+    draw_explosion_vertical(screen, bomb_x, bomb_y, -explosion_range, explosion_sprite_sheet)
+    draw_explosion_vertical(screen, bomb_x, bomb_y, explosion_range, explosion_sprite_sheet)
 
-def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset, typeobject):
+def draw_explosion_horizontal(screen, bomb_x, bomb_y, offset, explosion_image):
     # Base case: if offset exceeds the explosion range, stop drawing horizontally
     if abs(offset) > BLOCK_SIZE:
         return
     
-    # Draw the explosion block horizontally
+    # Calculate the position of the explosion block
     explosion_rect = pygame.Rect(bomb_x + offset, bomb_y + BLOCK_SIZE // 4, BLOCK_SIZE, BLOCK_SIZE // 2)
     
+    # Check if the explosion block collides with any objects
     if not detect_explosion_collision(explosion_rect):
-        pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
+        # Draw the explosion block
+        stored_explosion_rect = explosion_rect.copy()
+        stored_explosion_rect.y -= 15
+        screen.blit(explosion_image, stored_explosion_rect)
+    
+    draw_explosion_horizontal(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, explosion_image)
 
-    draw_explosion_horizontal(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject)
 
-def draw_explosion_vertical(screen, bomb_x, bomb_y, offset,typeobject):
+def draw_explosion_vertical(screen, bomb_x, bomb_y, offset, explosion_image):
     # Base case: if offset exceeds the explosion range, stop drawing vertically
     if abs(offset) > BLOCK_SIZE:
         return
-
-    # Draw the explosion block vertically
+    
+    # Calculate the position of the explosion block
     explosion_rect = pygame.Rect(bomb_x + BLOCK_SIZE // 4, bomb_y + offset, BLOCK_SIZE // 2, BLOCK_SIZE)
     
+    # Check if the explosion block collides with any objects
     if not detect_explosion_collision(explosion_rect):
-        pygame.draw.rect(screen, (255, 0, 0), explosion_rect)
+        # Draw the explosion block
+        stored_explosion_rect = explosion_rect.copy()
+        stored_explosion_rect.x -= 15
+        screen.blit(explosion_image, stored_explosion_rect)
     
-    draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, typeobject )
+    draw_explosion_vertical(screen, bomb_x, bomb_y, offset + BLOCK_SIZE, explosion_image)
+
 
 def detect_explosion_collision_aux(explosion_rect, row_index=0, col_index=0):
     # Base case: if all rows have been checked
@@ -220,6 +232,7 @@ def remove_collided_blocks(explosion_rect, Dblock, points):
     
     # Helper function to recursively remove collided blocks
     def remove_blocks_recursive(block_list, points, index=0):
+        global Bomb_explode
         # Base case: if the index exceeds the length of the block list, return
         if index >= len(block_list):
             return points

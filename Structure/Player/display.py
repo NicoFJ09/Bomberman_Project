@@ -117,5 +117,39 @@ def draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbom
 
         screen.blit(bomb_surface, bombs_list[0])
 
-def draw_enemy(screen, enemy, color):
-    pygame.draw.rect(screen, color, (enemy["x"], enemy["y"], ENEMY_SIZE, ENEMY_SIZE))
+def draw_enemy(screen, enemy, frame_counter, enemy_2_UP, enemy_2_DOWN,enemy_2_RIGHT, enemy_2_LEFT):
+    # Determine the direction of the enemy
+    direction = enemy["direction"]
+
+    if direction == "UP":
+        frames = extract_frames(enemy_2_UP, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    elif direction == "DOWN":
+        frames = extract_frames(enemy_2_DOWN, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    elif direction == "LEFT":
+        frames = extract_frames(enemy_2_LEFT, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    elif direction == "RIGHT":
+        frames = extract_frames(enemy_2_RIGHT, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    else:
+        frames = []  # Ensure frames is assigned a value in all cases
+    
+    # Calculate the frame index based on the frame counter and frame duration
+    frame_index = (frame_counter // (FRAME_DURATION*2)) % num_frames_per_direction
+    frame_to_blit = frames[frame_index]
+
+    screen.blit(frame_to_blit, (enemy["x"], enemy["y"]))
+
+def draw_basic_enemy(screen, enemy, frame_counter, sprite_sheet_image):
+    # Define the number of frames per direction
+    num_frames_per_direction = 3
+    
+    # Extract frames from the sprite sheet image
+    frames = extract_frames(sprite_sheet_image, num_frames_per_direction, BLOCK_SIZE, BLOCK_SIZE)
+    
+    # Calculate the frame index based on the frame counter and frame duration
+    frame_index = (frame_counter // (FRAME_DURATION*2)) % num_frames_per_direction
+    
+    # Get the frame to blit
+    frame_to_blit = frames[frame_index]
+    
+    # Blit the frame onto the screen at the enemy's position
+    screen.blit(frame_to_blit, (enemy["x"], enemy["y"]))

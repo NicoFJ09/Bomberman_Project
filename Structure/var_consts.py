@@ -60,7 +60,9 @@ music_playing = False
 Levels = ["Level 1", "Level 2", "Level 3"]
 
 #==================================================MAIN GAME CONSTANTS ===============================================
-player_position = [240,60]
+player_position1 = [240,780]
+player_position2= [240,60]
+player_position3 = [240,60]
 PLAYER_SPEED = 5
 PLAYER_SIZE=30
 BLOCK_SIZE=60
@@ -131,6 +133,7 @@ door_position1, door_position2, door_position3 = (360,300), (660, 420), (240, 30
 #============================ ENEMY HANDLING==================================
 SPAWN_POSITIONS1_level_1 = (480, 540)
 SPAWN_POSITIONS2_level_1 = (960, 660)
+SPAWN_POSITIONS3_level_1 = (600,60)
 
 SPAWN_POSITIONS1_level_2 = (720, 180)
 SPAWN_POSITIONS2_level_2 = (480, 300)
