@@ -92,7 +92,7 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
 
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock, points):
+def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock, points, enemy_position):
     global bomb_explosion_time, Bomb_explode
     
     # Get the current time
@@ -125,22 +125,30 @@ def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, playe
                 # If player has no lives left, handle game over condition
                 if player_lives <= 0:
                     # Handle game over condition here
-                    return player_lives, Dblock, points
+                    return player_lives, Dblock, points, enemy_position
             # Iterate over the blocks in Dblock and check for collision with explosion
             # Remove collided blocks from Dblock
             points = remove_collided_blocks(explosion_rect_horizontal, Dblock, points)
             points = remove_collided_blocks(explosion_rect_vertical, Dblock, points)
-            Bomb_explode = True
-            return player_lives, Dblock, points
+            # If the bomb hits the game bot, set its position outside the screen
+            if enemy_position is not None:
+                enemy_rect = pygame.Rect(enemy_position["x"], enemy_position["y"], ENEMY_SIZE, ENEMY_SIZE)
+                if enemy_rect.colliderect(explosion_rect_horizontal) or enemy_rect.colliderect(explosion_rect_vertical):
+                    direction = enemy_position["direction"]
+                    enemy_position = {"x": -ENEMY_SIZE, "y": -ENEMY_SIZE, "direction": direction}
+                    Bomb_explode = True
+                    points+=1000
+            return player_lives, Dblock, points, enemy_position
                 
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
             bombs_list.clear()  # Clear the bombs list after the explosion effect duration
             Bomb_explode = False  # Reset Bomb_exploded back to False
-        return player_lives, Dblock, points
+        return player_lives, Dblock, points, enemy_position
     
-    return player_lives, Dblock, points
-
+    # Add a default return statement if no other conditions are met
+    return player_lives, Dblock, points, enemy_position
+    
 def draw_explosion(screen, bomb_x, bomb_y, typeobject):
     # Draw explosion effect (red blocks in all directions)
     explosion_range = BLOCK_SIZE-1  # The range of the explosion
