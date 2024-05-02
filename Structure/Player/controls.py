@@ -260,32 +260,28 @@ def move_enemy(enemy):
         enemy["y"] -= ENEMY_SPEED
     elif enemy["direction"] == "DOWN":
         enemy["y"] += ENEMY_SPEED
-
     return enemy
 
 def check_enemy_collision(blocks_positions, enemy):
     global collision_count  # Access the global collision count variable
 
-    # Store the previous position of the enemy
-    prev_x, prev_y = enemy["x"], enemy["y"]
+    def check_collision_recursive(block_groups, block_group_index):
+        if block_group_index >= len(block_groups):
+            return False
+        else:
+            block_group = block_groups[block_group_index]
+            return check_blocks_in_group(block_group, 0) or check_collision_recursive(block_groups, block_group_index + 1)
 
-    enemy_rect = pygame.Rect(enemy["x"] + 10, enemy["y"] + 10, ENEMY_SIZE - 20, ENEMY_SIZE - 20)
-    
-    # Variable to track if the enemy collided with any block
-    collision_detected = False
-    
-    # Iterate through all blocks to check for collisions
-    for block_group in blocks_positions:
-        for block_x, block_y in block_group:
-            # Create a Rect object for the current block
+    def check_blocks_in_group(block_group, block_index):
+        if block_index >= len(block_group):
+            return False
+        else:
+            block_x, block_y = block_group[block_index]
             block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
-
-            # Check for collision between enemy and block hitbox
+            enemy_rect = pygame.Rect(enemy["x"] + 10, enemy["y"] + 10, ENEMY_SIZE - 20, ENEMY_SIZE - 20)
             if enemy_rect.colliderect(block_rect):
-                # Increment the collision count
+                global collision_count
                 collision_count += 1
-
-                # Move the enemy back by 15 pixels in the opposite direction
                 if enemy["direction"] == "LEFT":
                     enemy["x"] += 15
                 elif enemy["direction"] == "RIGHT":
@@ -294,26 +290,117 @@ def check_enemy_collision(blocks_positions, enemy):
                     enemy["y"] += 15
                 elif enemy["direction"] == "DOWN":
                     enemy["y"] -= 15
+                return True
+            else:
+                return check_blocks_in_group(block_group, block_index + 1)
 
-                # Set collision detected flag to True
-                collision_detected = True
-                break  # Exit inner loop if collision detected
+    collision_detected = check_collision_recursive(blocks_positions, 0)
 
-        if collision_detected:
-            break  # Exit outer loop if collision detected
-
-    # If collision detected, handle collision
     if collision_detected:
-        # Perform a 90-degree turn to a perpendicular direction
         if enemy["direction"] in ["LEFT", "RIGHT"]:
             enemy["direction"] = random.choice(["UP", "DOWN"])
         else:
             enemy["direction"] = random.choice(["LEFT", "RIGHT"])
-
-        # Reset collision count
         collision_count = 0
 
-    # Move the enemy in the new direction
     enemy = move_enemy(enemy)
 
     return enemy
+
+
+def create_secondary_enemy(spawn_positions):
+    # Create a new enemy with a predefined spawn position and random direction
+    x, y = spawn_positions
+    direction = random.choice(["LEFT", "RIGHT", "UP", "DOWN"])
+    return {"x": x, "y": y, "direction": direction}
+
+def move_secondary_enemy(enemy):
+    # Move enemy based on current direction
+    if enemy["direction"] == "LEFT" or enemy["direction"] == "RIGHT":
+        enemy["x"] += ENEMY_SPEED if enemy["direction"] == "RIGHT" else -ENEMY_SPEED
+    elif enemy["direction"] == "UP" or enemy["direction"] == "DOWN":
+        enemy["y"] += ENEMY_SPEED if enemy["direction"] == "DOWN" else -ENEMY_SPEED
+    return enemy
+
+def check_secondary_enemy_collision(blocks_positions, enemy):
+    global collision_count  # Access the global collision count variable
+
+    def check_collision_recursive(block_groups, index):
+        if index >= len(block_groups):
+            return False  # No collision detected in any block group
+        else:
+            block_group = block_groups[index]
+            collision_detected = check_blocks_in_group(block_group, 0)
+            if collision_detected:
+                return True  # Collision detected in this block group
+            else:
+                return check_collision_recursive(block_groups, index + 1)
+
+    def check_blocks_in_group(block_group, index):
+        if index >= len(block_group):
+            return False  # No collision detected in this block group
+        else:
+            block_x, block_y = block_group[index]
+            # Increase the enemy hitbox by reducing the dimensions of the enemy's rectangle
+            enemy_rect = pygame.Rect(enemy["x"], enemy["y"], ENEMY_SIZE, ENEMY_SIZE)
+            block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+            if enemy_rect.colliderect(block_rect):
+                global collision_count
+                # Move the enemy back by a few pixels
+                if enemy["direction"] == "LEFT" or enemy["direction"] == "RIGHT":
+                    enemy["x"] -= 5 if enemy["direction"] == "RIGHT" else -5
+                elif enemy["direction"] == "UP" or enemy["direction"] == "DOWN":
+                    enemy["y"] -= 5 if enemy["direction"] == "DOWN" else -5
+                # Change direction
+                enemy["direction"] = random.choice(["LEFT", "RIGHT"]) if enemy["direction"] in ["LEFT", "RIGHT"] else random.choice(["UP", "DOWN"])
+                return True  # Collision detected with this block
+            else:
+                return check_blocks_in_group(block_group, index + 1)
+
+    collision_detected = check_collision_recursive(blocks_positions, 0)
+    
+    # Move the enemy only if no collision was detected
+    if not collision_detected:
+        enemy = move_secondary_enemy(enemy)
+
+    return enemy
+
+# Define a constant for the cooldown duration in seconds
+COOLDOWN_DURATION = 1.0  # Adjust the duration as needed
+
+# Define a variable to store the time of the last collision
+last_collision_time = 0.0
+
+def handle_enemy_collision(player_position, enemy, enemy_size, player_lives, collision_state=False):
+    global last_collision_time
+    
+    # Get the current time
+    current_time = time.time()
+    
+    # Check if enough time has passed since the last collision
+    if current_time - last_collision_time >= COOLDOWN_DURATION:
+        # Unpack the enemy dictionary into x and y coordinates
+        enemy_x, enemy_y = enemy["x"], enemy["y"]
+
+        # Create Rect objects for the player's position and hitbox
+        player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
+        # Create a Rect object for the enemy's position and hitbox
+        enemy_rect = pygame.Rect(enemy_x, enemy_y, enemy_size, enemy_size)
+
+        # Check for collision between player and enemy
+        if player_rect.colliderect(enemy_rect):
+            # If the player is colliding with the enemy and was not previously colliding, decrement player lives
+            if not collision_state:
+                player_lives -= 1
+                # Set collision state to True to indicate the player is currently colliding
+                collision_state = True
+                # Update the last collision time
+                last_collision_time = current_time
+                # Return immediately after decrementing lives
+                return player_lives, collision_state
+    
+    # If the player is not colliding with the enemy and was previously colliding, reset collision state
+    if collision_state:
+        collision_state = False
+    
+    return player_lives, collision_state

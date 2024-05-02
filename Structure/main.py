@@ -16,7 +16,7 @@ from Screens.top_scores import render_top_scores
 from Screens.user_select import render_user_select
 
 #Main game imports
-from Player.controls import handle_player_actions, handle_bomb_explosion, create_enemy, move_enemy, check_enemy_collision
+from Player.controls import handle_player_actions, handle_bomb_explosion, create_enemy, move_enemy, check_enemy_collision, create_secondary_enemy, move_secondary_enemy, check_secondary_enemy_collision, handle_enemy_collision
 from Player.display import draw_player, draw_blocks, draw_bombs, draw_enemy
 from Screens.Levels.Level_constants import *
 from Screens.Levels.Level_Name_Display import render_level_name
@@ -257,7 +257,7 @@ def handle_home_controls(selected_index, options, settings_options, selected_opt
 
 # ================================================ SCREEN SELECTION HANDLING =============================================================================
 def handle_selected_option(selected_option, previous_screen):
-   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position, holding_key, bombs, lives,points, Dblocks_positions1, Dblocks_positions2, Dblocks_positions3, enemy
+   global selection_locked, game_section, selected_skin_option, selected_name, input_text, player_position, holding_key, bombs, lives,points, Dblocks_positions1, Dblocks_positions2, Dblocks_positions3, enemy, enemy2, enemy_2, enemy2_2, enemy3_2, enemy_3, enemy2_3, enemy3_3, enemy4_3, ENEMY_SPEED
    if selected_option == "START":
        return "skin_select" 
    
@@ -273,9 +273,11 @@ def handle_selected_option(selected_option, previous_screen):
        bombs = 30
        holding_key = False
        Dblocks_positions1= [[(240, 480), (600, 480), (300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420), (360, 360), (600, 360), (960, 360), (240, 300), (300, 300), (420, 300), (960, 300), (900, 780), (960, 780), (1080, 780), (900, 60), (1080, 60), (480, 240), (600, 240), (720, 240), (1080, 240), (600, 720), (720, 720), (300, 180), (360, 180), (600, 180), (900, 180), (1080, 180), (360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660), (720, 600), (720, 540), (960, 540), (1080, 540)]]
-       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 660), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
+       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 720), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
        Dblocks_positions3= [[(420, 420), (660, 420), (1080, 540), (1080, 180), (1080, 780), (240, 180), (840, 600), (1020, 60), (960, 600), (1020, 420), (600, 480), (600, 720), (600, 660), (900, 60), (840, 720), (360, 600), (960, 360), (360, 180), (240, 600), (360, 600)]]
-       enemy = create_enemy(SPAWN_POSITIONS1)
+       enemy = create_enemy(SPAWN_POSITIONS1_level_1)
+       enemy2= create_enemy(SPAWN_POSITIONS2_level_1)
+       ENEMY_SPEED = 2
        render_level_name(screen, Hfont, HWIDTH, HHEIGHT)
        return "level_1"
    elif selected_option == "change_level_2":
@@ -284,8 +286,12 @@ def handle_selected_option(selected_option, previous_screen):
        bombs = 25
        holding_key = False
        Dblocks_positions1= [[(240, 480), (600, 480), (300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420), (360, 360), (600, 360), (960, 360), (240, 300), (300, 300), (420, 300), (960, 300), (900, 780), (960, 780), (1080, 780), (900, 60), (1080, 60), (480, 240), (600, 240), (720, 240), (1080, 240), (600, 720), (720, 720), (300, 180), (360, 180), (600, 180), (900, 180), (1080, 180), (360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660), (720, 600), (720, 540), (960, 540), (1080, 540)]]
-       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 660), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
+       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 720), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
        Dblocks_positions3= [[(420, 420), (660, 420), (1080, 540), (1080, 180), (1080, 780), (240, 180), (840, 600), (1020, 60), (960, 600), (1020, 420), (600, 480), (600, 720), (600, 660), (900, 60), (840, 720), (360, 600), (960, 360), (360, 180), (240, 600), (360, 600)]]
+       enemy_2 = create_enemy(SPAWN_POSITIONS1_level_2)
+       enemy2_2= create_secondary_enemy(SPAWN_POSITIONS2_level_2)
+       enemy3_2 = create_enemy(SPAWN_POSITIONS3_level_2)
+       ENEMY_SPEED = 3
        render_level_name2(screen, Hfont, HWIDTH, HHEIGHT)
        return "level_2"
    elif selected_option == "change_level_3":
@@ -294,8 +300,13 @@ def handle_selected_option(selected_option, previous_screen):
        bombs = 15
        holding_key = False
        Dblocks_positions1= [[(240, 480), (600, 480), (300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420), (360, 360), (600, 360), (960, 360), (240, 300), (300, 300), (420, 300), (960, 300), (900, 780), (960, 780), (1080, 780), (900, 60), (1080, 60), (480, 240), (600, 240), (720, 240), (1080, 240), (600, 720), (720, 720), (300, 180), (360, 180), (600, 180), (900, 180), (1080, 180), (360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660), (720, 600), (720, 540), (960, 540), (1080, 540)]]
-       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 660), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
+       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 720), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
        Dblocks_positions3= [[(420, 420), (660, 420), (1080, 540), (1080, 180), (1080, 780), (240, 180), (840, 600), (1020, 60), (960, 600), (1020, 420), (600, 480), (600, 720), (600, 660), (900, 60), (840, 720), (360, 600), (960, 360), (360, 180), (240, 600), (360, 600)]]
+       enemy_3 = create_enemy(SPAWN_POSITIONS1_level_3)
+       enemy2_3= create_secondary_enemy(SPAWN_POSITIONS2_level_3)
+       enemy3_3 = create_enemy(SPAWN_POSITIONS3_level_3)
+       enemy4_3 = create_enemy(SPAWN_POSITIONS4_level_3)
+       ENEMY_SPEED = 4
        render_level_name3(screen, Hfont, HWIDTH, HHEIGHT)
        return "level_3"
    
@@ -365,8 +376,10 @@ def handle_selected_option(selected_option, previous_screen):
        points = 0
        holding_key = False
        Dblocks_positions1= [[(240, 480), (600, 480), (300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420), (360, 360), (600, 360), (960, 360), (240, 300), (300, 300), (420, 300), (960, 300), (900, 780), (960, 780), (1080, 780), (900, 60), (1080, 60), (480, 240), (600, 240), (720, 240), (1080, 240), (600, 720), (720, 720), (300, 180), (360, 180), (600, 180), (900, 180), (1080, 180), (360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660), (720, 600), (720, 540), (960, 540), (1080, 540)]]
-       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 660), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
+       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 720), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
        Dblocks_positions3= [[(420, 420), (660, 420), (1080, 540), (1080, 180), (1080, 780), (240, 180), (840, 600), (1020, 60), (960, 600), (1020, 420), (600, 480), (600, 720), (600, 660), (900, 60), (840, 720), (360, 600), (960, 360), (360, 180), (240, 600), (360, 600)]]
+       enemy = create_enemy(SPAWN_POSITIONS1_level_1)
+       enemy2= create_enemy(SPAWN_POSITIONS2_level_1)
        return "level_1"
    elif selected_option == "DEATH":
        game_section= "intro"
@@ -378,8 +391,10 @@ def handle_selected_option(selected_option, previous_screen):
        points= 0
        holding_key = False
        Dblocks_positions1= [[(240, 480), (600, 480), (300, 420), (360, 420), (660, 420), (900, 420), (960, 420), (1020, 420), (1080, 420), (360, 360), (600, 360), (960, 360), (240, 300), (300, 300), (420, 300), (960, 300), (900, 780), (960, 780), (1080, 780), (900, 60), (1080, 60), (480, 240), (600, 240), (720, 240), (1080, 240), (600, 720), (720, 720), (300, 180), (360, 180), (600, 180), (900, 180), (1080, 180), (360, 660), (420, 660), (540, 660), (780, 660), (780, 660), (1020, 660), (720, 600), (720, 540), (960, 540), (1080, 540)]]
-       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 660), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
+       Dblocks_positions2= [[(1080, 420), (300, 60), (240, 600), (960, 240), (720, 720), (420, 180), (720, 240), (240, 300), (720, 540), (240, 360), (960, 300), (540, 420), (420, 660), (480, 60), (720, 780), (360, 420), (600, 720), (420, 300), (240, 480), (1080, 660), (600, 180), (720, 720), (840, 600), (660, 180), (1080, 180), (420, 300), (840, 360), (360, 540), (480, 240), (240, 300), (300, 420), (960, 420), (300, 180), (420, 180), (600, 180), (420, 780), (240, 480), (360, 180), (600, 480), (720, 660)]]
        Dblocks_positions3= [[(420, 420), (660, 420), (1080, 540), (1080, 180), (1080, 780), (240, 180), (840, 600), (1020, 60), (960, 600), (1020, 420), (600, 480), (600, 720), (600, 660), (900, 60), (840, 720), (360, 600), (960, 360), (360, 180), (240, 600), (360, 600)]]
+       enemy = create_enemy(SPAWN_POSITIONS1_level_1)
+       enemy2= create_enemy(SPAWN_POSITIONS2_level_1)
        selected_skin_option = ""
        selected_name = ""
        input_text = ""
@@ -443,7 +458,7 @@ def score_append(score, name):
 # ========================================================================== MAIN CODE LOOP ==================================================================
 
 def main():
-   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter, holding_key, bombs, previous_screen, game_time, minutes, seconds, lives, WINNER, W_points, points, Dblocks_positions1, Dblocks_positions2, Dblocks_positions3, enemy, collision_count
+   global selected_index, Settings_options,Levels, Home_options, selected_option, current_screen, blink, blink_interval, last_blink_time, Initial_entry, y_axis, selected_skin_option, selected_name, music_playing, player_position, game_section, prev_game_section, current_direction, is_moving, frame_counter, holding_key, bombs, previous_screen, game_time, minutes, seconds, lives, WINNER, W_points, points, Dblocks_positions1, Dblocks_positions2, Dblocks_positions3, enemy, enemy2, enemy_2, enemy2_2, enemy3_2, enemy_3, enemy2_3, enemy3_3, enemy4_3, collision_count, collision_state, ENEMY_SPEED
    while RUNNING:
        
 
@@ -565,14 +580,17 @@ def main():
              
        #9 ========================================================================= LEVELS RENDERING =================================================================
        elif current_screen == "level_1":
+            ENEMY_SPEED = 2
             screen.fill((26, 140, 24))  # Green background
             Initial_entry = True
             frame_counter += 1
             level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, minutes, seconds, holding_key, bombs, current_screen)
             all_blocks_positions = blocks_positions + Dblocks_positions1
             player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, bombs )
-            enemy= move_enemy(enemy)
-            check_enemy_collision(all_blocks_positions, enemy)
+            enemy= move_secondary_enemy(enemy)
+            enemy2= move_secondary_enemy(enemy2)
+            check_secondary_enemy_collision(all_blocks_positions, enemy)
+            check_secondary_enemy_collision (all_blocks_positions, enemy2)
             holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
             selected_option, holding_key, player_position = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway, open_doorway)
 
@@ -581,19 +599,28 @@ def main():
             draw_blocks(screen, D_block, Dblocks_positions1)
 
             draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
-            draw_enemy(screen, enemy)
+            draw_enemy(screen, enemy,(255, 0, 0))
+            draw_enemy(screen,enemy2, (255, 0, 0))
             lives, Dblocks_positions1, points = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives, Dblocks_positions1, points)
+            lives, collision_state = handle_enemy_collision(player_position, enemy, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy2, ENEMY_SIZE, lives)
             if lives <= 0:
                 selected_option = "DEATH"
             current_screen = handle_selected_option(selected_option, previous_screen)
        elif current_screen == "level_2":
+            ENEMY_SPEED = 3
             screen.blit(L2_bg, (240, 60))
             Initial_entry = True
             frame_counter += 1
             level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, minutes, seconds, holding_key, bombs, current_screen)
             all_blocks_positions = blocks_positions + Dblocks_positions2
             player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, bombs )
-            
+            enemy_2= move_enemy(enemy_2)
+            enemy2_2= move_secondary_enemy(enemy2_2)
+            enemy3_2= move_enemy(enemy3_2)
+            check_enemy_collision(all_blocks_positions, enemy_2)
+            check_secondary_enemy_collision (all_blocks_positions, enemy2_2)
+            check_enemy_collision(all_blocks_positions, enemy3_2)
             holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
             selected_option, holding_key, player_position = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway, open_doorway)
 
@@ -602,7 +629,13 @@ def main():
             draw_blocks(screen, D_block2, Dblocks_positions2)
 
             draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+            draw_enemy(screen, enemy_2,(255, 0, 0))
+            draw_enemy(screen,enemy2_2, (0, 255, 0))
+            draw_enemy(screen,enemy3_2, (255, 0, 0))
             lives, Dblocks_positions2, points = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives, Dblocks_positions2, points)
+            lives, collision_state = handle_enemy_collision(player_position, enemy_2, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy2_2, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy3_2, ENEMY_SIZE, lives)
             if lives <= 0:
                 selected_option = "DEATH"
             current_screen = handle_selected_option(selected_option, previous_screen)
@@ -613,9 +646,15 @@ def main():
             level_constants(screen, GAME_font, HWIDTH, HHEIGHT, points, lives, minutes, seconds, holding_key, bombs, current_screen)
             all_blocks_positions = blocks_positions + Dblocks_positions3
             player_position, current_screen, selected_option, previous_screen, is_moving, current_direction, bombs = handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, all_blocks_positions, bombs_list, bombs)
-        
-
-
+            ENEMY_SPEED = 4
+            enemy_3= move_enemy(enemy_3)
+            enemy2_3= move_secondary_enemy(enemy2_3)
+            enemy3_3= move_enemy(enemy3_3)
+            enemy4_3= move_enemy(enemy4_3)
+            check_enemy_collision(all_blocks_positions, enemy_3)
+            check_secondary_enemy_collision (all_blocks_positions, enemy2_3)
+            check_enemy_collision(all_blocks_positions, enemy3_3)
+            check_enemy_collision(all_blocks_positions, enemy4_3)
             holding_key = draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key)
             selected_option, holding_key, player_position = draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, doorway, open_doorway)
 
@@ -624,7 +663,15 @@ def main():
             draw_blocks(screen, D_block3, Dblocks_positions3)
 
             draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbomb_load_sprite, Sbomb_load_sprite, frame_counter)
+            draw_enemy(screen, enemy_3,(255, 0, 0))
+            draw_enemy(screen,enemy2_3, (0, 255, 0))
+            draw_enemy(screen,enemy3_3, (255, 0, 0))
+            draw_enemy(screen,enemy4_3, (255, 0, 0))
             lives, Dblocks_positions3, points = handle_bomb_explosion(screen, bombs_list, blocks_positions, player_position, lives, Dblocks_positions3, points)
+            lives, collision_state = handle_enemy_collision(player_position, enemy_3, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy2_3, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy3_3, ENEMY_SIZE, lives)
+            lives, collision_state = handle_enemy_collision(player_position, enemy4_3, ENEMY_SIZE, lives)
             if lives <= 0:
                 selected_option = "DEATH"
             current_screen = handle_selected_option(selected_option, previous_screen) 
