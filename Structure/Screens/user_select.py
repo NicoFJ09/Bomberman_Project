@@ -1,5 +1,5 @@
 import pygame
-
+from var_consts import *
 def render_user_select(screen,font, Mbackground, Ubackground, skins , HWIDTH, HHEIGHT,PAGE_WIDTH, PAGE_HEIGHT, selected_index, current_screen, input_text):
 
     # Background slightly gray coated
@@ -44,16 +44,21 @@ def render_user_select(screen,font, Mbackground, Ubackground, skins , HWIDTH, HH
         "Kirby": (465, 175),
         "Samus": (86.5, 175)
     }
-    invisible_rectangle.blit(skins["Samus"], (skin_coordinates["Samus"]))
-    invisible_rectangle.blit(skins["Bomberman"], (skin_coordinates["Bomberman"]))
-    invisible_rectangle.blit(skins["Kirby"], (skin_coordinates["Kirby"]))
+
+    # Blit the first sprite of each skin
+    invisible_rectangle.blit(skins["Samus"][0], skin_coordinates["Samus"])
+    invisible_rectangle.blit(skins["Bomberman"][0], skin_coordinates["Bomberman"])
+    invisible_rectangle.blit(skins["Kirby"][0], skin_coordinates["Kirby"])
+
     if current_screen == "skin_select":
-        if list(skins.keys())[selected_index] == "Bomberman":
-            pygame.draw.rect(invisible_rectangle, (255, 255, 0), (282.5-10, 25-10, skins["Bomberman"].get_width()+20, skins["Bomberman"].get_height()+20), 3)
-        elif list(skins.keys())[selected_index] == "Kirby":
-            pygame.draw.rect(invisible_rectangle, (255, 255, 0), (465-10, 175-10, skins["Kirby"].get_width()+20, skins["Kirby"].get_height()+20), 3)
-        elif list(skins.keys())[selected_index] == "Samus":
-            pygame.draw.rect(invisible_rectangle, (255, 255, 0), (86.5-10, 175-10, skins["Samus"].get_width()+20, skins["Samus"].get_height()+20), 3)
+        selected_skin = list(skins.keys())[selected_index]
+        selected_sprite = skins[selected_skin][0]  # Get the first sprite of the selected skin
+        selected_coord = skin_coordinates[selected_skin]
+
+        # Draw a rectangle around the selected skin
+        pygame.draw.rect(invisible_rectangle, (255, 255, 0), 
+                        (selected_coord[0] - 10, selected_coord[1] - 10, 
+                        selected_sprite.get_width() + 20, selected_sprite.get_height() + 20), 3)
     elif current_screen == "name_select":
         pygame.draw.rect(screen, (255, 255, 0), text_box_rect, 3)
         # Render and display entered text

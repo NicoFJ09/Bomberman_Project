@@ -1,6 +1,6 @@
 import pygame
 
-def render_GameOver(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT):
+def render_GameOver(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT, skins, skin_lose):
     # Background slightly gray coated
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     overlay.fill((128, 128, 128, 128))
@@ -20,8 +20,20 @@ def render_GameOver(screen, font, Mbackground, Hbackground, WIDTH, HEIGHT):
     screen.blit(title_surface, title_text_rect)
 
 
+
     # Render text for "Main Menu" option
     main_menu_text = font.render("Menú Principal", True, (255, 255, 0))
-    main_menu_rect = main_menu_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+    main_menu_rect = main_menu_text.get_rect(center=(WIDTH // 2, HEIGHT*2 // 3 - 125))
     screen.blit(main_menu_text, main_menu_rect)
 
+    # Depending on the selected_skin_option variable, display the second index of the sprite
+    selected_sprite_index = 2  # Index of the sprite to display (second index)
+    selected_sprite = skins[skin_lose][selected_sprite_index]
+
+    # Calculate the position to display the sprite
+    sprite_rect = selected_sprite.get_rect(midtop=(WIDTH // 2, (main_menu_rect.top + title_text_rect.bottom) // 2))
+
+    sprite_rect.y -= 100  # Adjust this value as needed
+
+    # Blit the selected sprite
+    screen.blit(selected_sprite, sprite_rect)

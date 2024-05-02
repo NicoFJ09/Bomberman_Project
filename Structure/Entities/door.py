@@ -1,5 +1,6 @@
 from var_consts import *
-def draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, Door):
+import pygame
+def draw_door(screen, holding_key, player_position, door_position1, door_position2, door_position3, current_screen, Door, Open_door):
     # Define door rectangles outside the if statement
     door_rect1 = pygame.Rect(door_position1[0], door_position1[1], BLOCK_SIZE, BLOCK_SIZE)
     door_rect2 = pygame.Rect(door_position2[0], door_position2[1], BLOCK_SIZE, BLOCK_SIZE)
@@ -28,11 +29,20 @@ def draw_door(screen, holding_key, player_position, door_position1, door_positio
     
     # Blit the door on the screen
     if current_screen == "level_1":
-        screen.blit(Door, door_position1)
+        if holding_key == False:
+            screen.blit(Door, door_position1)
+        else: 
+            screen.blit(Open_door, door_position1)
     elif current_screen == "level_2":
-        screen.blit(Door, door_position2)
+        if holding_key == False:
+            screen.blit(Door, door_position2)
+        else: 
+            screen.blit(Open_door, door_position2)
     elif current_screen == "level_3":
-        screen.blit(Door, door_position3)
+        if holding_key == False:
+            screen.blit(Door, door_position3)
+        else: 
+            screen.blit(Open_door, door_position3)
     
     # If no transition occurred, return the current screen
     return current_screen, holding_key, player_position

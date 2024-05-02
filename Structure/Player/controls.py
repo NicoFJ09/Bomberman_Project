@@ -1,7 +1,7 @@
 import pygame
 from var_consts import *
 import time
-
+import random
 #=====================================================PLAYER CONTROL AND ENTITIES COLISSION MANAGEMENT=================================================================
 
 def handle_player_actions(Settings_options, current_screen, player_position, is_moving, current_direction, blocks_positions, bombs_list, bombs):
@@ -37,6 +37,7 @@ def handle_player_actions(Settings_options, current_screen, player_position, is_
     # Handle bomb placement
     if bombs > 0 and keys[pygame.key.key_code(Settings_options["DROP BOMB:"])] and not bombs_list:
         bombs_list.append(((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE)))
+        print((round(player_position[0] / BLOCK_SIZE) * BLOCK_SIZE, round(player_position[1] / BLOCK_SIZE) * BLOCK_SIZE))
         bombs -= 1
         global bomb_explosion_time
         bomb_explosion_time = time.time()
@@ -89,8 +90,9 @@ def check_collision(blocks_positions, new_x, new_y, player_position, is_moving, 
 
     # Recursively call the function with updated indices
     return check_collision(blocks_positions, new_x, new_y, player_position, is_moving, current_direction, index, inner_index)
+
 #=============================== BOMB EXPLOSION ====================================
-def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock):
+def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, player_lives, Dblock, points):
     global bomb_explosion_time, Bomb_explode
     
     # Get the current time
@@ -123,21 +125,21 @@ def handle_bomb_explosion(screen, bombs_list, typeobject, player_position, playe
                 # If player has no lives left, handle game over condition
                 if player_lives <= 0:
                     # Handle game over condition here
-                    return player_lives, Dblock
+                    return player_lives, Dblock, points
             # Iterate over the blocks in Dblock and check for collision with explosion
             # Remove collided blocks from Dblock
-            remove_collided_blocks(explosion_rect_horizontal, Dblock)
-            remove_collided_blocks(explosion_rect_vertical, Dblock)
+            points = remove_collided_blocks(explosion_rect_horizontal, Dblock, points)
+            points = remove_collided_blocks(explosion_rect_vertical, Dblock, points)
             Bomb_explode = True
-            return player_lives, Dblock
+            return player_lives, Dblock, points
                 
         # Delay before clearing the bombs list
         if current_time >= bomb_explosion_time + EXPLOSION_DURATION_SECONDS:
             bombs_list.clear()  # Clear the bombs list after the explosion effect duration
             Bomb_explode = False  # Reset Bomb_exploded back to False
-        return player_lives, Dblock
+        return player_lives, Dblock, points
     
-    return player_lives, Dblock
+    return player_lives, Dblock, points
 
 def draw_explosion(screen, bomb_x, bomb_y, typeobject):
     # Draw explosion effect (red blocks in all directions)
@@ -204,12 +206,15 @@ def detect_explosion_collision_aux(explosion_rect, row_index=0, col_index=0):
 def detect_explosion_collision(explosion_rect):
     return detect_explosion_collision_aux(explosion_rect)
 
-def remove_collided_blocks(explosion_rect, Dblock):
+#========================================= BLOCK DESTRUCTION  ====================================
+
+def remove_collided_blocks(explosion_rect, Dblock, points):
+    
     # Helper function to recursively remove collided blocks
-    def remove_blocks_recursive(block_list, index=0):
+    def remove_blocks_recursive(block_list, points, index=0):
         # Base case: if the index exceeds the length of the block list, return
         if index >= len(block_list):
-            return
+            return points
 
         # Get the current block position
         block_position = block_list[index]
@@ -219,22 +224,96 @@ def remove_collided_blocks(explosion_rect, Dblock):
         if block_rect.colliderect(explosion_rect):
             if block_position in block_list:
                 block_list.remove(block_position)
+                points += 500
             # Adjust the index after removing the block
             index -= 1
+            
 
         # Move to the next block position by making a recursive call with the updated index
-        remove_blocks_recursive(block_list, index + 1)
+        return remove_blocks_recursive(block_list, points, index + 1)
 
     # Helper function to apply remove_blocks_recursive to each block list in Dblock
-    def apply_to_dblock(block_index=0):
+    def apply_to_dblock(points, block_index=0):
         if block_index >= len(Dblock):
-            return
-        remove_blocks_recursive(Dblock[block_index])
-        apply_to_dblock(block_index + 1)
+            return points
+        points = remove_blocks_recursive(Dblock[block_index], points)
+        return apply_to_dblock(points, block_index + 1)
 
     # Start the recursion by passing the first block list in Dblock
-    apply_to_dblock()
+    return apply_to_dblock(points)
 
+#========================================================= ENEMY MOVEMENT AND LOGIC ============================================================
 
+def create_enemy(spawn_positions):
+    # Create a new enemy with a predefined spawn position and random direction
+    x, y = spawn_positions
+    direction = random.choice(["LEFT", "RIGHT", "UP", "DOWN"])
+    return {"x": x, "y": y, "direction": direction}
 
-#========================================= BLOCK DESTRUCTION  ====================================
+def move_enemy(enemy):
+    # Move enemy based on current direction
+    if enemy["direction"] == "LEFT":
+        enemy["x"] -= ENEMY_SPEED
+    elif enemy["direction"] == "RIGHT":
+        enemy["x"] += ENEMY_SPEED
+    elif enemy["direction"] == "UP":
+        enemy["y"] -= ENEMY_SPEED
+    elif enemy["direction"] == "DOWN":
+        enemy["y"] += ENEMY_SPEED
+
+    return enemy
+
+def check_enemy_collision(blocks_positions, enemy):
+    global collision_count  # Access the global collision count variable
+
+    # Store the previous position of the enemy
+    prev_x, prev_y = enemy["x"], enemy["y"]
+
+    enemy_rect = pygame.Rect(enemy["x"] + 10, enemy["y"] + 10, ENEMY_SIZE - 20, ENEMY_SIZE - 20)
+    
+    # Variable to track if the enemy collided with any block
+    collision_detected = False
+    
+    # Iterate through all blocks to check for collisions
+    for block_group in blocks_positions:
+        for block_x, block_y in block_group:
+            # Create a Rect object for the current block
+            block_rect = pygame.Rect(block_x, block_y, BLOCK_SIZE, BLOCK_SIZE)
+
+            # Check for collision between enemy and block hitbox
+            if enemy_rect.colliderect(block_rect):
+                # Increment the collision count
+                collision_count += 1
+
+                # Move the enemy back by 15 pixels in the opposite direction
+                if enemy["direction"] == "LEFT":
+                    enemy["x"] += 15
+                elif enemy["direction"] == "RIGHT":
+                    enemy["x"] -= 15
+                elif enemy["direction"] == "UP":
+                    enemy["y"] += 15
+                elif enemy["direction"] == "DOWN":
+                    enemy["y"] -= 15
+
+                # Set collision detected flag to True
+                collision_detected = True
+                break  # Exit inner loop if collision detected
+
+        if collision_detected:
+            break  # Exit outer loop if collision detected
+
+    # If collision detected, handle collision
+    if collision_detected:
+        # Perform a 90-degree turn to a perpendicular direction
+        if enemy["direction"] in ["LEFT", "RIGHT"]:
+            enemy["direction"] = random.choice(["UP", "DOWN"])
+        else:
+            enemy["direction"] = random.choice(["LEFT", "RIGHT"])
+
+        # Reset collision count
+        collision_count = 0
+
+    # Move the enemy in the new direction
+    enemy = move_enemy(enemy)
+
+    return enemy

@@ -116,3 +116,7 @@ def draw_bombs(screen, selected_skin_option, bombs_list, Kbomb_load_sprite, Bbom
         bomb_surface.blit(bomb_frame, (0, 0))  # Blit the bomb frame onto the surface
 
         screen.blit(bomb_surface, bombs_list[0])
+
+def draw_enemy(screen, enemy):
+    pygame.draw.rect(screen, (255, 0, 0), (enemy["x"], enemy["y"], ENEMY_SIZE, ENEMY_SIZE))
+

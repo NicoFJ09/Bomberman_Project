@@ -3,9 +3,9 @@ from var_consts import *
 
 def draw_key(screen, holding_key, player_position, key_position1, key_position2, key_position3, current_screen, Key):
     # Define key rectangles outside the if statement
-    key_rect1 = pygame.Rect(key_position1[0], key_position1[1], BLOCK_SIZE, BLOCK_SIZE)
-    key_rect2 = pygame.Rect(key_position2[0], key_position2[1], BLOCK_SIZE, BLOCK_SIZE)
-    key_rect3 = pygame.Rect(key_position3[0], key_position3[1], BLOCK_SIZE, BLOCK_SIZE)
+    key_rect1 = pygame.Rect(key_position1[0]+BLOCK_SIZE//6, key_position1[1]+BLOCK_SIZE//6, (BLOCK_SIZE)//3, (BLOCK_SIZE)//3)
+    key_rect2 = pygame.Rect(key_position2[0]+BLOCK_SIZE//6, key_position2[1]+BLOCK_SIZE//6, (BLOCK_SIZE)//3, (BLOCK_SIZE)//3)
+    key_rect3 = pygame.Rect(key_position3[0]+BLOCK_SIZE//6, key_position3[1]+BLOCK_SIZE//6, (BLOCK_SIZE)//3, (BLOCK_SIZE)//3)
 
     player_rect = pygame.Rect(player_position[0], player_position[1], PLAYER_SIZE, PLAYER_SIZE)
     
