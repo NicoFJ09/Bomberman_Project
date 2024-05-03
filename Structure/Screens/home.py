@@ -41,7 +41,7 @@ def render_home(screen, Hbackground, font, WIDTH, HEIGHT, hovered_index, options
    # Calcular coordenada x para todas opciones
    x= WIDTH/2
 
-   version_text = "EL HOMBRE BOMBA V1.1.6"
+   version_text = "EL HOMBRE BOMBA V3.0.0"
    version_surface = font.render(version_text, True, (235, 129, 63)) 
    version_rect = version_surface.get_rect(topleft=(10, HEIGHT - 50))  # Bottom left corner with some padding
    screen.blit(version_surface, version_rect)

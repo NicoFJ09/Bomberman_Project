@@ -486,7 +486,7 @@ def main():
 
         
 
-       if Settings_options["MUSIC TOGGLE:"] == "<-ON->":
+       if Settings_options["MUSIC TOGGLE:"] == "<-ON->" or Settings_options["MUSIC TOGGLE:"] == "<-OFF->":
         if not music_playing and game_section== "intro":
             pygame.mixer.music.stop()
             pygame.mixer.music.load(home_track)
